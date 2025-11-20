@@ -1,0 +1,177 @@
+@use "../../styles/variables" as *;
+
+.meeting {
+  padding: 2rem 0;
+
+  &__header {
+    margin-bottom: 1.5rem;
+  }
+
+  &__info {
+    font-size: 0.9rem;
+    opacity: 0.85;
+    margin: 0.25rem 0;
+  }
+
+  &__id {
+    font-weight: 600;
+  }
+
+  &__link {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+    word-break: break-all;
+  }
+
+  &__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  /* Área de video */
+
+  &__video-area {
+    border-radius: 1.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.95);
+  }
+
+  &__video-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__video-tile {
+    border-radius: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.5);
+    background: radial-gradient(circle at top left, $color-primary, #020617);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+  }
+
+  &__video-tile--main {
+    grid-row: 1 / span 2;
+  }
+
+  &__video-label {
+    font-size: 0.85rem;
+    text-align: center;
+    opacity: 0.92;
+  }
+
+  &__hint {
+    font-size: 0.8rem;
+    opacity: 0.75;
+    margin-top: 0.25rem;
+  }
+
+  /* Panel de chat */
+
+  &__chat-area {
+    border-radius: 1.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.95);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 520px;
+  }
+
+  &__chat-title {
+    font-size: 1rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  &__chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    display: grid;
+    gap: 0.5rem;
+    padding-right: 0.25rem;
+  }
+
+  &__chat-message {
+    border-radius: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    padding: 0.5rem 0.75rem;
+    background: rgba(15, 23, 42, 0.95);
+
+    &--info {
+      border-style: dashed;
+      opacity: 0.9;
+    }
+  }
+
+  &__chat-meta {
+    font-size: 0.75rem;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  &__chat-text {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  &__chat-input {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    margin-top: 0.25rem;
+
+    input {
+      border-radius: 9999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      padding: 0.45rem 0.9rem;
+      background: rgba(15, 23, 42, 0.95);
+      color: $color-text;
+      font-size: 0.9rem;
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    button {
+      border-radius: 9999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.9);
+      color: $color-text;
+      padding: 0.45rem 1rem;
+      font-size: 0.85rem;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  &__chat-label {
+    display: none;
+  }
+}
+
+/* Responsive layout para la sala de reunión */
+@media (max-width: 900px) {
+  .meeting {
+    &__layout {
+      grid-template-columns: 1fr;
+    }
+
+    &__chat-area {
+      max-height: none;
+    }
+  }
+}

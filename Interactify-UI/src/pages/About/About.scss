@@ -1,0 +1,16 @@
+@use "../../styles/variables" as *;
+
+.about {
+  padding: 2rem 0;
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    max-width: 40rem;
+    opacity: 0.85;
+    margin-bottom: 0.75rem;
+  }
+}

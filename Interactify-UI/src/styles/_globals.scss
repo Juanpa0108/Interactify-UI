@@ -1,0 +1,61 @@
+@use './variables' as *;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: $font-main;
+  background-color: $color-bg;
+  color: $color-text;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* Estilos de foco visibles para accesibilidad */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid $color-primary;
+  outline-offset: 2px;
+}
+
+/* Skip link: "Saltar al contenido principal" */
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  background-color: $color-bg;
+  color: $color-text;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  font-size: 0.85rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  opacity: 0;
+}
+
+/* El enlace solo se muestra cuando recibe foco por teclado */
+.skip-link:focus-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
