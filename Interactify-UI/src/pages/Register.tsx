@@ -1,15 +1,19 @@
 import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../config/firebase';
 import '../styles/Register.css';
 
 const MIN_AGE = 13;
-const MIN_PWD_LENGTH = 8;
+const MIN_PWD_LENGTH = 6; // Cambiado a 6 según los requisitos
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const hasUpper = (s: string) => /[A-Z]/.test(s);
 const hasNumber = (s: string) => /[0-9]/.test(s);
 const hasSpecial = (s: string) => /[^A-Za-z0-9]/.test(s);
 
 const Register: React.FC = () => {
+  const navigate = useNavigate();
   const imgSrc = import.meta.env.PUBLIC_URL + '/registerImage.avif';
   const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
 
@@ -20,6 +24,8 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const ageNum = Number(age || 0);
 
@@ -28,9 +34,6 @@ const Register: React.FC = () => {
     lastName: lastName.trim().length > 0,
     ageOk: !isNaN(ageNum) && ageNum >= MIN_AGE,
     pwdLength: password.length >= MIN_PWD_LENGTH,
-    pwdUpper: hasUpper(password),
-    pwdNumber: hasNumber(password),
-    pwdSpecial: hasSpecial(password),
     pwdMatch: password.length > 0 && password === confirm,
   }), [firstName, lastName, ageNum, password, confirm]);
 
@@ -38,14 +41,65 @@ const Register: React.FC = () => {
   const passed = Object.values(requirements).filter(Boolean).length;
   const progress = Math.round((passed / totalReq) * 100);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
+    setError('');
     const ok = Object.values(requirements).every(Boolean);
-    if (ok) {
-      // TODO: submit to API
-      console.log('register', { firstName, lastName, age: ageNum, email });
-      alert('Account created (demo)');
+    
+    if (!ok) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Crear usuario en Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+
+      // Registrar en el backend con información adicional
+      const response = await fetch(`${API_URL}/api/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          password, // El backend no lo usará porque Firebase ya lo maneja, pero lo enviamos por compatibilidad
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al registrar usuario');
+      }
+
+      // Guardar token en localStorage
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('user', JSON.stringify(userCredential.user));
+
+      // Redirigir al home o dashboard
+      navigate('/');
+    } catch (err: any) {
+      console.error('Error en registro:', err);
+      let errorMessage = 'Error al crear la cuenta';
+      
+      if (err.code === 'auth/email-already-in-use') {
+        errorMessage = 'El email ya está registrado';
+      } else if (err.code === 'auth/invalid-email') {
+        errorMessage = 'Email inválido';
+      } else if (err.code === 'auth/weak-password') {
+        errorMessage = 'La contraseña es muy débil';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -62,6 +116,12 @@ const Register: React.FC = () => {
             </div>
 
             <p className="lead">Create your account in seconds</p>
+
+            {error && (
+              <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>
+                {error}
+              </div>
+            )}
 
             <form className="auth-form" onSubmit={onSubmit} aria-describedby="register-help">
             <div className="input-row">
@@ -130,7 +190,7 @@ const Register: React.FC = () => {
                   type="password"
                   placeholder="Password"
                   aria-describedby="pwd-req"
-                  aria-invalid={submitted && !(requirements.pwdLength && requirements.pwdUpper && requirements.pwdNumber && requirements.pwdSpecial)}
+                  aria-invalid={submitted && !requirements.pwdLength}
                   required
                 />
               </label>
@@ -156,16 +216,15 @@ const Register: React.FC = () => {
 
               <div className="req-list">
                 <div className={`req ${requirements.pwdLength ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>At least {MIN_PWD_LENGTH} characters</span></div>
-                <div className={`req ${requirements.pwdUpper ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One uppercase letter</span></div>
-                <div className={`req ${requirements.pwdNumber ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One number</span></div>
-                <div className={`req ${requirements.pwdSpecial ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One special character</span></div>
                 <div className={`req ${requirements.pwdMatch ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Passwords match</span></div>
               </div>
             </div>
 
             
 
-            <button className="auth-btn" type="submit">Create an account</button>
+            <button className="auth-btn" type="submit" disabled={loading}>
+              {loading ? 'Creando cuenta...' : 'Create an account'}
+            </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
               <small className="small">Already a member? </small>
