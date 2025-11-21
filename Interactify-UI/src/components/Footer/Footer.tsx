@@ -30,8 +30,18 @@ const Footer: React.FC = () => {
               </Link>
             </li>
             <li>
+              <Link to="/login" className="footer__sitemap-link">
+                Iniciar sesión
+              </Link>
+            </li>
+            <li>
               <Link to="/about" className="footer__sitemap-link">
                 Sobre nosotros
+              </Link>
+            </li>
+            <li>
+              <Link to="/edit-profile" className="footer__sitemap-link">
+                Editar perfil
               </Link>
             </li>
             <li>

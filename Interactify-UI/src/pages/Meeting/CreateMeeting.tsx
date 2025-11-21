@@ -12,14 +12,23 @@ const CreateMeeting: React.FC = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
+    // Comprobamos si el usuario está autenticado
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      // Si no está autenticado, redirigimos a login
+      navigate("/login");
+      return;
+    }
+
     setIsRedirecting(true);
 
+    // Generación de ID único para la reunión
     const meetingId =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : Math.random().toString(36).substring(2, 10);
 
-    // Pequeño timeout solo para que la usuaria vea el estado (opcional)
+    // Timeout para mostrar el estado de carga antes de redirigir (opcional)
     const timer = setTimeout(() => {
       navigate(`/meeting/${meetingId}`, { replace: true });
     }, 700);

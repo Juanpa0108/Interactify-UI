@@ -9,10 +9,6 @@ const About: React.FC = () => {
         integrador. En cada sprint se irá añadiendo funcionalidad: gestión de
         usuarios, chat en tiempo real, audio y video.
       </p>
-      <p>
-        Esta página forma parte del Sprint 1 y sirve como sección informativa
-        básica para que el usuario entienda el propósito del proyecto.
-      </p>
     </div>
   );
 };

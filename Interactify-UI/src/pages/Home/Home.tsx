@@ -72,12 +72,12 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Mapa del sitio en la página de inicio */}
+      {/* Mapa del sitio en la página de inicio 
       <section
         className="home__sitemap"
         aria-labelledby="home-sitemap-title"
       >
-        <h2 id="home-sitemap-title">Mapa del sitio</h2>
+       <h2 id="home-sitemap-title">Mapa del sitio</h2>
 
         <div className="home__sitemap-grid">
           <div className="home__sitemap-column">
@@ -98,13 +98,13 @@ const Home: React.FC = () => {
                   Crear reunión 
                 </Link>
               </li>
-              {/* Si más adelante tienen Login / Profile / Help, se agregan aquí */}
+              {/* Si más adelante tienen Login / Profile / Help, se agregan aquí 
             </ul>
-          </div>
+          </div> 
 
           
         </div>
-      </section>
+      </section> */}
     </div>
   );
 };
