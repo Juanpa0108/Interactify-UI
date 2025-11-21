@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../config/firebase';
 import '../styles/Register.css';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const ENDPOINT_GET = `${API_URL}/api/user/profile`;
-const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
+const ENDPOINT_GET = '/api/user/profile';
+const ENDPOINT_UPDATE = '/api/user/update';
 
 type UserData = {
 	firstName: string;
@@ -35,53 +33,36 @@ const EditProfile: React.FC = () => {
 
 	useEffect(() => {
 		if (!token) return;
-		
-		const fetchProfile = async () => {
-			setLoading(true);
-			setError('');
-			
-			try {
-				// Obtener el token actualizado de Firebase
-				const currentUser = auth.currentUser;
-				if (!currentUser) {
-					throw new Error('Usuario no autenticado');
-				}
-				
-				const idToken = await currentUser.getIdToken();
-				
-				const res = await fetch(ENDPOINT_GET, {
-					method: 'GET',
-					headers: {
-						'Authorization': `Bearer ${idToken}`,
-						'Content-Type': 'application/json',
-					},
-				});
-				
+		setLoading(true);
+		setError('');
+		fetch(ENDPOINT_GET, {
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+		})
+			.then(async (res) => {
 				if (!res.ok) throw new Error('No se pudo cargar el perfil');
 				const data = await res.json();
 				setUser(data);
-				setForm({
-					firstName: data.firstName || '',
-					lastName: data.lastName || '',
-					age: data.age || 0,
-					email: data.email || '',
-					password: '', // No mostramos la contraseña
-				});
+				setForm(data);
 				setLoading(false);
-			} catch (err: any) {
+			})
+			.catch((err) => {
 				setError(err.message);
 				setLoading(false);
-			}
-		};
-		
-		fetchProfile();
+			});
 	}, [token]);
 
 	useEffect(() => {
 		if (!user) return;
 		setChanged(
 			form.firstName !== user.firstName ||
-			form.lastName !== user.lastName
+			form.lastName !== user.lastName ||
+			form.age !== user.age ||
+			form.email !== user.email ||
+			form.password !== user.password
 		);
 	}, [form, user]);
 
@@ -94,42 +75,25 @@ const EditProfile: React.FC = () => {
 		e.preventDefault();
 		setSaving(true);
 		setError('');
-		
-		try {
-			// Obtener el token actualizado de Firebase
-			const currentUser = auth.currentUser;
-			if (!currentUser) {
-				throw new Error('Usuario no autenticado');
-			}
-			
-			const idToken = await currentUser.getIdToken();
-			
-			const res = await fetch(ENDPOINT_UPDATE, {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${idToken}`,
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					firstName: form.firstName,
-					lastName: form.lastName,
-				}),
+		fetch(ENDPOINT_UPDATE, {
+			method: 'POST',
+			headers: {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(form),
+		})
+			.then(async (res) => {
+				if (!res.ok) throw new Error('No se pudo guardar');
+				const updated = await res.json();
+				setUser(updated);
+				setSaving(false);
+				setChanged(false);
+			})
+			.catch((err) => {
+				setError(err.message);
+				setSaving(false);
 			});
-			
-			if (!res.ok) throw new Error('No se pudo guardar');
-			const updated = await res.json();
-			setUser(updated.user);
-			setForm({
-				...form,
-				firstName: updated.user.firstName,
-				lastName: updated.user.lastName,
-			});
-			setSaving(false);
-			setChanged(false);
-		} catch (err: any) {
-			setError(err.message);
-			setSaving(false);
-		}
 	};
 
 	if (!token) {
@@ -140,12 +104,12 @@ const EditProfile: React.FC = () => {
 		<div className="auth-page">
 			<div className="auth-wrapper">
 				<div className="auth-image" aria-hidden="true">
-					<img src={'/registerImage.avif'} alt="Edit profile" />
+					<img src={import.meta.env.PUBLIC_URL + '/registerImage.avif'} alt="Edit profile" />
 				</div>
 				<div className="auth-card">
 					<div className="auth-card-inner">
 						<div className="auth-header">
-							<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
+							<img src={import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
 							<h1>Editar perfil</h1>
 						</div>
 						<p className="lead">Modifica tus datos personales</p>
@@ -181,14 +145,39 @@ const EditProfile: React.FC = () => {
 								</div>
 								<div className="input-row">
 									<label>
+										<span className="sr-only">Age</span>
+										<input
+											name="age"
+											type="number"
+											value={form.age}
+											onChange={handleChange}
+											placeholder="Age"
+											min={13}
+											required
+										/>
+									</label>
+									<label>
 										<span className="sr-only">Email address</span>
 										<input
 											name="email"
 											type="email"
 											value={form.email}
+											onChange={handleChange}
 											placeholder="Email address"
-											disabled
-											style={{ opacity: 0.6, cursor: 'not-allowed' }}
+											required
+										/>
+									</label>
+								</div>
+								<div className="input-row">
+									<label>
+										<span className="sr-only">Password</span>
+										<input
+											name="password"
+											type="password"
+											value={form.password}
+											onChange={handleChange}
+											placeholder="Password"
+											required
 										/>
 									</label>
 								</div>
