@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Footer from "./components/Footer/Footer";
-import RequireAuth from "./components/RequireAuth";
 
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
@@ -12,64 +11,25 @@ import Register from "./pages/Register";
 import EditProfile from "./pages/EditProfile";
 
 const App: React.FC = () => {
-  /**
-   * Application layout and routing.
-   *
-   * Notes:
-   * - `Home` and `About` are public routes and should be visible even
-   *   when the user is not authenticated.
-   * - Routes that modify or access protected resources (create meeting,
-   *   join meeting, edit profile) are wrapped with `RequireAuth` which
-   *   redirects unauthenticated users to `/login`.
-   * - A skip link (`#main-content`) is included for keyboard accessibility.
-   */
   return (
     <div className="app-container">
-      {/* Accessibility skip link: allows keyboard users to jump to main content */}
+      {/* Skip link para WCAG 2.4.1 Bypass Blocks */}
       <a href="#main-content" className="skip-link">
-        Skip to main content
+        Saltar al contenido principal
       </a>
 
       <Navbar />
 
-      {/* Main region receives focus from the skip link */}
+      {/* Main con id para recibir el foco del skip link */}
       <main id="main-content" className="app-main" tabIndex={-1}>
         <Routes>
-          {/* Public routes */}
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
-
-          {/* Protected routes - require a logged-in Firebase user */}
-          <Route
-            path="/create"
-            element={
-              <RequireAuth>
-                <CreateMeeting />
-              </RequireAuth>
-            }
-          />
-
-          <Route
-            path="/meeting/:id"
-            element={
-              <RequireAuth>
-                <Meeting />
-              </RequireAuth>
-            }
-          />
-
-          {/* Auth pages */}
+          <Route path="/create" element={<CreateMeeting />} />
+          <Route path="/meeting/:id" element={<Meeting />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-
-          <Route
-            path="/edit-profile"
-            element={
-              <RequireAuth>
-                <EditProfile />
-              </RequireAuth>
-            }
-          />
+          <Route path="/edit-profile" element={<EditProfile />} />
         </Routes>
       </main>
 
