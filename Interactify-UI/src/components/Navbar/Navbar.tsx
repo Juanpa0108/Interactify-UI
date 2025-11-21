@@ -1,12 +1,52 @@
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../../config/firebase";
 import { Link, NavLink } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Navbar.scss";
+import { useEffect, useState } from "react";
 
 /**
  * Main navigation bar.
- * Provides access to the key sections of the Interactify platform.
+ *
+ * Responsibilities:
+ * - Display brand and primary navigation links.
+ * - Show different actions depending on authentication state (login vs
+ *   profile + logout).
+ * - Listen for Firebase auth state changes to keep the UI in sync with
+ *   the authentication status.
  */
 const Navbar: React.FC = () => {
+  const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage as a quick heuristic (may be stale). The
+    // authoritative source is Firebase's onAuthStateChanged below.
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+
+    // Subscribe to Firebase auth updates. This keeps the navbar reactive
+    // to login/logout events from other tabs or asynchronous flows.
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -42,6 +82,10 @@ const Navbar: React.FC = () => {
             Sobre nosotros
           </NavLink>
 
+          {isAuthenticated ? (
+            <>
+              <NavLink
+                to="/edit-profile"
           {/* Mostrar las opciones de login y registro solo si el usuario no está autenticado */}
           {!isAuthenticated && (
             <>
@@ -51,6 +95,19 @@ const Navbar: React.FC = () => {
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
               >
+                Perfil
+              </NavLink>
+              <button
+                onClick={handleLogout}
+                className="navbar__link"
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <NavLink
+              to="/login"
                 Iniciar sesión
               </NavLink>
             </>
@@ -76,6 +133,7 @@ const Navbar: React.FC = () => {
                 `navbar__link ${isActive ? "navbar__link--active" : ""}`
               }
             >
+              Sign in
               Editar perfil
             </NavLink>
           )}
