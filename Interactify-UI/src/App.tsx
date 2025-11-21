@@ -8,6 +8,7 @@ import Meeting from "./pages/Meeting/Meeting";
 import CreateMeeting from "./pages/Meeting/CreateMeeting";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import EditProfile from "./pages/EditProfile";
 
 const App: React.FC = () => {
   return (
@@ -28,6 +29,7 @@ const App: React.FC = () => {
           <Route path="/meeting/:id" element={<Meeting />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/edit-profile" element={<EditProfile />} />
         </Routes>
       </main>
 
