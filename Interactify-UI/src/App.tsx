@@ -6,6 +6,8 @@ import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Meeting from "./pages/Meeting/Meeting";
 import CreateMeeting from "./pages/Meeting/CreateMeeting";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const App: React.FC = () => {
   return (
@@ -24,6 +26,8 @@ const App: React.FC = () => {
           <Route path="/about" element={<About />} />
           <Route path="/create" element={<CreateMeeting />} />
           <Route path="/meeting/:id" element={<Meeting />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
 
