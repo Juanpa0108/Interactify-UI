@@ -5,6 +5,7 @@ import Meeting from "./pages/Meeting/Meeting";
 import CreateMeeting from "./pages/Meeting/CreateMeeting";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import EditProfile from "./pages/EditProfile";
 
 const AppRoutes = () => {
   return useRoutes([
@@ -14,6 +15,7 @@ const AppRoutes = () => {
     { path: "/meeting/:id", element: <Meeting /> },
     { path: "/login", element: <Login /> },
     { path: "/register", element: <Register /> },
+    { path: "/edit-profile", element: <EditProfile />} ,
   ]);
 };
 
