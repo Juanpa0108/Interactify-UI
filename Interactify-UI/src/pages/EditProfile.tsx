@@ -140,12 +140,12 @@ const EditProfile: React.FC = () => {
 		<div className="auth-page">
 			<div className="auth-wrapper">
 				<div className="auth-image" aria-hidden="true">
-					<img src={import.meta.env.PUBLIC_URL + '/registerImage.avif'} alt="Edit profile" />
+					<img src={'/registerImage.avif'} alt="Edit profile" />
 				</div>
 				<div className="auth-card">
 					<div className="auth-card-inner">
 						<div className="auth-header">
-							<img src={import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
+							<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
 							<h1>Editar perfil</h1>
 						</div>
 						<p className="lead">Modifica tus datos personales</p>

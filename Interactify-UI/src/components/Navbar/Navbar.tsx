@@ -6,18 +6,26 @@ import { useEffect, useState } from "react";
 
 /**
  * Main navigation bar.
- * Provides access to the key sections of the Interactify platform.
+ *
+ * Responsibilities:
+ * - Display brand and primary navigation links.
+ * - Show different actions depending on authentication state (login vs
+ *   profile + logout).
+ * - Listen for Firebase auth state changes to keep the UI in sync with
+ *   the authentication status.
  */
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Verificar si hay un token en localStorage
+    // Check localStorage as a quick heuristic (may be stale). The
+    // authoritative source is Firebase's onAuthStateChanged below.
     const token = localStorage.getItem('token');
     setIsAuthenticated(!!token);
 
-    // Escuchar cambios en el estado de autenticación
+    // Subscribe to Firebase auth updates. This keeps the navbar reactive
+    // to login/logout events from other tabs or asynchronous flows.
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setIsAuthenticated(!!user);
     });
@@ -82,7 +90,7 @@ const Navbar: React.FC = () => {
                 className="navbar__link"
                 style={{ background: 'none', border: 'none', cursor: 'pointer' }}
               >
-                Cerrar sesión
+                Sign out
               </button>
             </>
           ) : (
@@ -92,7 +100,7 @@ const Navbar: React.FC = () => {
                 `navbar__link ${isActive ? "navbar__link--active" : ""}`
               }
             >
-              Iniciar sesión
+              Sign in
             </NavLink>
           )}
         </nav>

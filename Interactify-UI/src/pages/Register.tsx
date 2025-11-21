@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import app, { auth, googleProvider, githubProvider } from '../config/firebase';
 import '../styles/Register.css';
 
 const MIN_AGE = 13;
@@ -14,8 +14,8 @@ const hasSpecial = (s: string) => /[^A-Za-z0-9]/.test(s);
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const imgSrc = import.meta.env.PUBLIC_URL + '/registerImage.avif';
-  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
+  const imgSrc = '/registerImage.avif';
+  const logoSrc = '/logoInteractify.jpeg';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -23,6 +23,8 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,6 +56,9 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      // Debug: print resolved Firebase app options to confirm client config
+      // eslint-disable-next-line no-console
+      console.debug('Firebase app options (Register):', (app as any)?.options || {});
       // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
@@ -84,7 +89,9 @@ const Register: React.FC = () => {
       // Redirigir al home o dashboard
       navigate('/');
     } catch (err: any) {
-      console.error('Error en registro:', err);
+      // Log full error for debugging (includes code and message)
+      // eslint-disable-next-line no-console
+      console.error('Error en registro:', { message: err?.message, code: err?.code, raw: err });
       let errorMessage = 'Error al crear la cuenta';
       
       if (err.code === 'auth/email-already-in-use') {
@@ -102,6 +109,68 @@ const Register: React.FC = () => {
       setLoading(false);
     }
   }
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await fetch(`${API_URL}/api/auth/login/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al iniciar sesión con Google');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      navigate('/');
+    } catch (err: any) {
+      console.error('Error en registro con Google:', err);
+      setError(err.message || 'Error al registrarse con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGitHubLogin = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await fetch(`${API_URL}/api/auth/login/github`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al iniciar sesión con GitHub');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      navigate('/');
+    } catch (err: any) {
+      console.error('Error en registro con GitHub:', err);
+      setError(err.message || 'Error al registrarse con GitHub');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-page">
@@ -181,31 +250,89 @@ const Register: React.FC = () => {
             </div>
 
             <div className="input-row">
-              <label>
+              <label style={{ position: 'relative' }}>
                 <span className="sr-only">Password</span>
                 <input
                   aria-label="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Password"
                   aria-describedby="pwd-req"
                   aria-invalid={submitted && !requirements.pwdLength}
                   required
+                  style={{ paddingRight: 40 }}
                 />
+                <button
+                  type="button"
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((s) => !s)}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3-11-8 1.42-3.44 4.58-6 8-6 1.38 0 2.68.35 3.82.96" />
+                      <path d="M1 1l22 22" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
               </label>
 
-              <label>
+              <label style={{ position: 'relative' }}>
                 <span className="sr-only">Confirm password</span>
                 <input
                   aria-label="Confirm password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  type="password"
+                  type={showConfirm ? 'text' : 'password'}
                   placeholder="Confirm password"
                   aria-invalid={submitted && !requirements.pwdMatch}
                   required
+                  style={{ paddingRight: 40 }}
                 />
+                <button
+                  type="button"
+                  aria-pressed={showConfirm}
+                  onClick={() => setShowConfirm((s) => !s)}
+                  title={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showConfirm ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3-11-8 1.42-3.44 4.58-6 8-6 1.38 0 2.68.35 3.82.96" />
+                      <path d="M1 1l22 22" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
               </label>
             </div>
 
@@ -229,8 +356,8 @@ const Register: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
               <small className="small">Already a member? </small>
               <div className="social-row" aria-hidden>
-                <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
-                <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
+                <div className="social-btn"><button type="button" onClick={handleGoogleLogin} className="social-btn" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button></div>
+                <div className="social-btn"><button type="button" onClick={handleGitHubLogin} className="social-btn" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button></div>
               </div>
             </div>
 

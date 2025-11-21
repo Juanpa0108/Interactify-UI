@@ -8,11 +8,12 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const imgSrc = import.meta.env.PUBLIC_URL + '/loginImage.png';
-  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
+  const imgSrc = '/loginImage.png';
+  const logoSrc = '/logoInteractify.jpeg';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -174,13 +175,44 @@ const Login: React.FC = () => {
                 required
               />
 
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  style={{ paddingRight: 40 }}
+                />
+                <button
+                  type="button"
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword((s) => !s)}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 4,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {showPassword ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3-11-8 1.42-3.44 4.58-6 8-6 1.38 0 2.68.35 3.82.96" />
+                      <path d="M1 1l22 22" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              </div>
 
               <div className="auth-row">
                 <a className="auth-link" href="#">Forgot password?</a>
@@ -200,7 +232,7 @@ const Login: React.FC = () => {
                     disabled={loading}
                     style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
                   >
-                    <img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} />
+                    <img src={'/googleLogo.png'} alt="google" style={{ height:18 }} />
                   </button>
                   <button
                     type="button"
@@ -209,7 +241,7 @@ const Login: React.FC = () => {
                     disabled={loading}
                     style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
                   >
-                    <img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} />
+                    <img src={'/githubLogo.png'} alt="github" style={{ height:18 }} />
                   </button>
                 </div>
               </div>
