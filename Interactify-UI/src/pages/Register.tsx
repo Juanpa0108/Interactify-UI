@@ -10,8 +10,8 @@ const hasNumber = (s: string) => /[0-9]/.test(s);
 const hasSpecial = (s: string) => /[^A-Za-z0-9]/.test(s);
 
 const Register: React.FC = () => {
-  const imgSrc = process.env.PUBLIC_URL + '/registerImage.avif';
-  const logoSrc = process.env.PUBLIC_URL + '/logoInteractify.jpeg';
+  const imgSrc = import.meta.env.PUBLIC_URL + '/registerImage.avif';
+  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -170,8 +170,8 @@ const Register: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
               <small className="small">Already a member? </small>
               <div className="social-row" aria-hidden>
-                <div className="social-btn"><img src={process.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
-                <div className="social-btn"><img src={process.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
+                <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
+                <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
               </div>
             </div>
 

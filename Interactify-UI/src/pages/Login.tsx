@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import '../styles/Login.css';
 
 const Login: React.FC = () => {
-  const imgSrc = process.env.PUBLIC_URL + '/loginImage.png';
-  const logoSrc = process.env.PUBLIC_URL + '/logoInteractify.jpeg';
+  const imgSrc = import.meta.env.PUBLIC_URL + '/loginImage.png';
+  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
 
   return (
     <div className="auth-page">
@@ -34,8 +34,8 @@ const Login: React.FC = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
             <small className="small">Or continue with</small>
             <div className="social-row">
-              <div className="social-btn"><img src={process.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
-              <div className="social-btn"><img src={process.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
+              <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
+              <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
             </div>
           </div>
 
