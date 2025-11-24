@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../config/firebase';
+import type { User } from 'firebase/auth';
 import '../styles/Register.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -10,44 +11,43 @@ const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
 type UserData = {
 	firstName: string;
 	lastName: string;
-	age: number;
 	email: string;
-	password: string;
 };
 
 const EditProfile: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<UserData | null>(null);
-	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', age: 0, email: '', password: '' });
+	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', email: '' });
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
-	const [token, setToken] = useState<string | null>(null);
+	const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 	const [changed, setChanged] = useState(false);
 	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
-		const t = localStorage.getItem('token');
-		setToken(t);
-		if (!t) {
-			navigate('/login');
-		}
+		const unsubscribe = auth.onAuthStateChanged((fbUser) => {
+			if (!fbUser) {
+				setFirebaseUser(null);
+				setUser(null);
+				setForm({ firstName: '', lastName: '', email: '' });
+				navigate('/login');
+				return;
+			}
+			setFirebaseUser(fbUser);
+		});
+
+		return () => unsubscribe();
 	}, [navigate]);
 
 	useEffect(() => {
-		if (!token) return;
+		if (!firebaseUser) return;
 		
 		const fetchProfile = async () => {
 			setLoading(true);
 			setError('');
 			
 			try {
-				// Obtener el token actualizado de Firebase
-				const currentUser = auth.currentUser;
-				if (!currentUser) {
-					throw new Error('Usuario no autenticado');
-				}
-				
-				const idToken = await currentUser.getIdToken();
+				const idToken = await firebaseUser.getIdToken();
 				
 				const res = await fetch(ENDPOINT_GET, {
 					method: 'GET',
@@ -63,9 +63,7 @@ const EditProfile: React.FC = () => {
 				setForm({
 					firstName: data.firstName || '',
 					lastName: data.lastName || '',
-					age: data.age || 0,
 					email: data.email || '',
-					password: '', // No mostramos la contraseña
 				});
 				setLoading(false);
 			} catch (err: any) {
@@ -74,8 +72,8 @@ const EditProfile: React.FC = () => {
 			}
 		};
 		
-		fetchProfile();
-	}, [token]);
+		void fetchProfile();
+	}, [firebaseUser]);
 
 	useEffect(() => {
 		if (!user) return;
@@ -87,7 +85,7 @@ const EditProfile: React.FC = () => {
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: name === 'age' ? Number(value) : value }));
+		setForm((prev) => ({ ...prev, [name]: value }));
 	};
 
 	const handleSave = async (e: React.FormEvent) => {
@@ -96,13 +94,11 @@ const EditProfile: React.FC = () => {
 		setError('');
 		
 		try {
-			// Obtener el token actualizado de Firebase
-			const currentUser = auth.currentUser;
-			if (!currentUser) {
+			if (!firebaseUser) {
 				throw new Error('Usuario no autenticado');
 			}
 			
-			const idToken = await currentUser.getIdToken();
+			const idToken = await firebaseUser.getIdToken();
 			
 			const res = await fetch(ENDPOINT_UPDATE, {
 				method: 'POST',
@@ -132,7 +128,7 @@ const EditProfile: React.FC = () => {
 		}
 	};
 
-	if (!token) {
+	if (!firebaseUser) {
 		return null;
 	}
 

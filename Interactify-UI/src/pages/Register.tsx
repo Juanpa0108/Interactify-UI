@@ -1,21 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import app, { auth, googleProvider, githubProvider } from '../config/firebase';
+import { auth, googleProvider, githubProvider } from '../config/firebase';
 import '../styles/Register.css';
 
 const MIN_AGE = 13;
 const MIN_PWD_LENGTH = 6; // Cambiado a 6 según los requisitos
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-const hasUpper = (s: string) => /[A-Z]/.test(s);
-const hasNumber = (s: string) => /[0-9]/.test(s);
-const hasSpecial = (s: string) => /[^A-Za-z0-9]/.test(s);
-
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const imgSrc = import.meta.env.PUBLIC_URL + '/registerImage.avif';
-  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
+  const imgSrc = '/registerImage.avif';
+  const logoSrc = '/logoInteractify.jpeg';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -23,8 +19,6 @@ const Register: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -44,8 +38,6 @@ const Register: React.FC = () => {
   const progress = Math.round((passed / totalReq) * 100);
 
   async function onSubmit(e: React.FormEvent) {
-  // Handle form submission
-  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
     setError('');
@@ -58,9 +50,6 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // Debug: print resolved Firebase app options to confirm client config
-      // eslint-disable-next-line no-console
-      console.debug('Firebase app options (Register):', (app as any)?.options || {});
       // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
@@ -86,14 +75,13 @@ const Register: React.FC = () => {
 
       // Guardar token en localStorage
       localStorage.setItem('token', idToken);
+      localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(userCredential.user));
 
       // Redirigir al home o dashboard
       navigate('/');
     } catch (err: any) {
-      // Log full error for debugging (includes code and message)
-      // eslint-disable-next-line no-console
-      console.error('Error en registro:', { message: err?.message, code: err?.code, raw: err });
+      console.error('Error en registro:', err);
       let errorMessage = 'Error al crear la cuenta';
       
       if (err.code === 'auth/email-already-in-use') {
@@ -109,15 +97,6 @@ const Register: React.FC = () => {
       setError(errorMessage);
     } finally {
       setLoading(false);
-    if (ok) {
-      // Aquí simulamos el registro. En una aplicación real, la API devolvería un token.
-      const token = "sample-auth-token"; // Este token sería devuelto por el servidor.
-      localStorage.setItem('authToken', token);  // Guardamos el token en el localStorage.
-      console.log('register', { firstName, lastName, age: ageNum, email });
-      alert('Account created (demo)');
-
-      // Redirigimos al usuario a la página de creación de reuniones.
-      navigate('/create-meeting');
     }
   }
 
@@ -126,12 +105,16 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      // Autenticar con Google usando Firebase
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
+      // Verificar con el backend
       const response = await fetch(`${API_URL}/api/auth/login/google`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ idToken }),
       });
 
@@ -141,12 +124,27 @@ const Register: React.FC = () => {
       }
 
       const data = await response.json();
+
+      // Guardar token en localStorage
       localStorage.setItem('token', idToken);
-      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      localStorage.setItem('authToken', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirigir al home
       navigate('/');
     } catch (err: any) {
-      console.error('Error en registro con Google:', err);
-      setError(err.message || 'Error al registrarse con Google');
+      console.error('Error en registro/login con Google:', err);
+      let errorMessage = 'Error al iniciar sesión con Google';
+      
+      if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Ventana de Google cerrada. Intenta de nuevo.';
+      } else if (err.code === 'auth/popup-blocked') {
+        errorMessage = 'Ventana emergente bloqueada. Por favor, permite ventanas emergentes.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -157,12 +155,16 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
+      // Autenticar con GitHub
       const result = await signInWithPopup(auth, githubProvider);
       const idToken = await result.user.getIdToken();
 
+      // Verificar con el backend
       const response = await fetch(`${API_URL}/api/auth/login/github`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ idToken }),
       });
 
@@ -172,12 +174,17 @@ const Register: React.FC = () => {
       }
 
       const data = await response.json();
+
+      // Guardar token en localStorage
       localStorage.setItem('token', idToken);
-      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      localStorage.setItem('authToken', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirigir al home
       navigate('/');
     } catch (err: any) {
-      console.error('Error en registro con GitHub:', err);
-      setError(err.message || 'Error al registrarse con GitHub');
+      console.error('Error en login con GitHub:', err);
+      setError(err.message || 'Error al iniciar sesión con GitHub');
     } finally {
       setLoading(false);
     }
@@ -195,7 +202,7 @@ const Register: React.FC = () => {
               <h1>Registro</h1>
             </div>
 
-            <p className="lead">Crea tu cuenta en segundos</p>
+            <p className="lead">Create your account in seconds</p>
 
             {error && (
               <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>
@@ -261,192 +268,44 @@ const Register: React.FC = () => {
             </div>
 
             <div className="input-row">
-              <label style={{ position: 'relative' }}>
+              <label>
                 <span className="sr-only">Password</span>
                 <input
                   aria-label="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  type={showPassword ? 'text' : 'password'}
+                  type="password"
                   placeholder="Password"
                   aria-describedby="pwd-req"
                   aria-invalid={submitted && !requirements.pwdLength}
                   required
-                  style={{ paddingRight: 40 }}
                 />
-                <button
-                  type="button"
-                  aria-pressed={showPassword}
-                  onClick={() => setShowPassword((s) => !s)}
-                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 4,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {showPassword ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3-11-8 1.42-3.44 4.58-6 8-6 1.38 0 2.68.35 3.82.96" />
-                      <path d="M1 1l22 22" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
-                </button>
               </label>
 
-              <label style={{ position: 'relative' }}>
+              <label>
                 <span className="sr-only">Confirm password</span>
                 <input
                   aria-label="Confirm password"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
-                  type={showConfirm ? 'text' : 'password'}
+                  type="password"
                   placeholder="Confirm password"
                   aria-invalid={submitted && !requirements.pwdMatch}
                   required
-                  style={{ paddingRight: 40 }}
                 />
-                <button
-                  type="button"
-                  aria-pressed={showConfirm}
-                  onClick={() => setShowConfirm((s) => !s)}
-                  title={showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  style={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 4,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {showConfirm ? (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3-11-8 1.42-3.44 4.58-6 8-6 1.38 0 2.68.35 3.82.96" />
-                      <path d="M1 1l22 22" />
-                    </svg>
-                  ) : (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  )}
-                </button>
               </label>
             </div>
-              <div className="input-row">
-                <label>
-                  <span className="sr-only">First name</span>
-                  <input
-                    aria-label="First name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    type="text"
-                    placeholder="First name"
-                    aria-invalid={submitted && !requirements.firstName}
-                    required
-                  />
-                </label>
 
-                <label>
-                  <span className="sr-only">Last name</span>
-                  <input
-                    aria-label="Last name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    type="text"
-                    placeholder="Last name"
-                    aria-invalid={submitted && !requirements.lastName}
-                    required
-                  />
-                </label>
-              </div>
-
-              <div className="input-row">
-                <label>
-                  <span className="sr-only">Age</span>
-                  <input
-                    aria-label="Age"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    type="number"
-                    placeholder="Age"
-                    min={MIN_AGE}
-                    aria-invalid={submitted && !requirements.ageOk}
-                    required
-                  />
-                </label>
-
-                <label>
-                  <span className="sr-only">Email address</span>
-                  <input
-                    aria-label="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    type="email"
-                    placeholder="Email address"
-                    required
-                  />
-                </label>
+            <div className="pwd-requirements" id="pwd-req" aria-live="polite">
+              <div className="pwd-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Password strength">
+                <i style={{ width: `${progress}%` }} />
               </div>
 
               <div className="req-list">
                 <div className={`req ${requirements.pwdLength ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>At least {MIN_PWD_LENGTH} characters</span></div>
                 <div className={`req ${requirements.pwdMatch ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Passwords match</span></div>
-              <div className="input-row">
-                <label>
-                  <span className="sr-only">Password</span>
-                  <input
-                    aria-label="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    type="password"
-                    placeholder="Password"
-                    aria-describedby="pwd-req"
-                    aria-invalid={submitted && !(requirements.pwdLength && requirements.pwdUpper && requirements.pwdNumber && requirements.pwdSpecial)}
-                    required
-                  />
-                </label>
-
-                <label>
-                  <span className="sr-only">Confirm password</span>
-                  <input
-                    aria-label="Confirm password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                    type="password"
-                    placeholder="Confirm password"
-                    aria-invalid={submitted && !requirements.pwdMatch}
-                    required
-                  />
-                </label>
               </div>
-
-              <div className="pwd-requirements" id="pwd-req" aria-live="polite">
-                <div className="pwd-progress" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Password strength">
-                  <i style={{ width: `${progress}%` }} />
-                </div>
-
-                <div className="req-list">
-                  <div className={`req ${requirements.pwdLength ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>At least {MIN_PWD_LENGTH} characters</span></div>
-                  <div className={`req ${requirements.pwdUpper ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One uppercase letter</span></div>
-                  <div className={`req ${requirements.pwdNumber ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One number</span></div>
-                  <div className={`req ${requirements.pwdSpecial ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>One special character</span></div>
-                  <div className={`req ${requirements.pwdMatch ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Passwords match</span></div>
-                </div>
-              </div>
+            </div>
 
             <button className="auth-btn" type="submit" disabled={loading}>
               {loading ? 'Creando cuenta...' : 'Create an account'}
@@ -455,24 +314,33 @@ const Register: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
               <small className="small">Already a member? </small>
               <div className="social-row" aria-hidden>
-                <div className="social-btn"><button type="button" onClick={handleGoogleLogin} className="social-btn" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button></div>
-                <div className="social-btn"><button type="button" onClick={handleGitHubLogin} className="social-btn" style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button></div>
-              <button className="auth-btn" type="submit">Crear cuenta</button>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                <small className="small">¿Ya eres miembro? </small>
-                <div className="social-row" aria-hidden>
-                  <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
-                  <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
-                </div>
+                <button
+                  type="button"
+                  className="social-btn"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
+                >
+                  <img src="/googleLogo.png" alt="google" style={{ height:18 }} />
+                </button>
+                <button
+                  type="button"
+                  className="social-btn"
+                  onClick={handleGitHubLogin}
+                  disabled={loading}
+                  style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
+                >
+                  <img src="/githubLogo.png" alt="github" style={{ height:18 }} />
+                </button>
               </div>
+            </div>
 
-              <div style={{ textAlign: 'center', marginTop: 12 }}>
-                <span className="small">O </span>
-                <Link className="auth-link" to="/login">Iniciar sesión</Link>
-              </div>
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <span className="small">Or </span>
+              <Link className="auth-link" to="/login">Log in</Link>
+            </div>
 
-              <div id="register-help" className="sr-only">Password must be at least {MIN_PWD_LENGTH} characters, include an uppercase letter, a number and a special character. Age must be {MIN_AGE} or older.</div>
+            <div id="register-help" className="sr-only">Password must be at least {MIN_PWD_LENGTH} characters. Age must be {MIN_AGE} or older.</div>
             </form>
           </div>
         </div>
