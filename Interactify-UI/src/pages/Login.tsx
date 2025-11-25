@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, googleProvider, githubProvider } from '../config/firebase';
 import '../styles/Login.css';
 
@@ -77,17 +77,18 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.error('Error en login con Google:', err);
-      let errorMessage = 'Error al iniciar sesión con Google';
-      
-      if (err.code === 'auth/popup-closed-by-user') {
-        errorMessage = 'Ventana de Google cerrada. Intenta de nuevo.';
-      } else if (err.code === 'auth/popup-blocked') {
-        errorMessage = 'Ventana emergente bloqueada. Por favor, permite ventanas emergentes.';
-      } else if (err.message) {
-        errorMessage = err.message;
+      const msg = String(err?.message || err);
+      // If popup fails due to COOP/popup blocking, fall back to redirect flow
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return; // redirect started; user will be returned to app
+        } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
+        }
       }
-      
-      setError(errorMessage);
+
+      setError(err.message || 'Error al iniciar sesión con Google');
     } finally {
       setLoading(false);
     }
@@ -110,6 +111,16 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       console.error(err);
+      const msg = String(err?.message || err);
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
+        try {
+          await signInWithRedirect(auth, githubProvider);
+          return;
+        } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
+        }
+      }
+
       setError(err.message || 'Error al iniciar sesión con GitHub');
     } finally { setLoading(false); }
   };

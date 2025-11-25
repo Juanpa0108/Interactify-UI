@@ -6,6 +6,50 @@ import App from './App';
 import './styles/_globals.scss';
 import './styles/_layout.scss';
 import ErrorBoundary from './ErrorBoundary';
+import { getRedirectResult } from 'firebase/auth';
+import { auth } from './config/firebase';
+
+// If the app was invoked as the result of an OAuth redirect (signInWithRedirect),
+// process the redirect result and, if a user was returned, call the backend
+// to complete server-side verification and persist the token in localStorage.
+// This runs once during startup and does not block rendering.
+;(async () => {
+  try {
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const result = await getRedirectResult(auth);
+    if (result && result.user) {
+      try {
+        const idToken = await result.user.getIdToken();
+        // Try to guess provider path (google/github) from credential if available
+        const providerId = (result as any)?.providerId || (result as any)?.credential?.providerId || '';
+        let path = '/api/auth/login';
+        if (/google/i.test(providerId)) path = '/api/auth/login/google';
+        else if (/github/i.test(providerId)) path = '/api/auth/login/github';
+
+        const resp = await fetch(`${API_URL}${path}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+
+        if (resp.ok) {
+          const data = await resp.json();
+          localStorage.setItem('token', idToken);
+          localStorage.setItem('authToken', idToken);
+          localStorage.setItem('user', JSON.stringify(data.user || result.user));
+          // Ensure the app navigates to home after redirect login
+          try { window.history.replaceState({}, '', '/'); } catch (e) {}
+        } else {
+          console.warn('[getRedirectResult] backend login failed', await resp.text());
+        }
+      } catch (e) {
+        console.error('Error processing redirect sign-in result:', e);
+      }
+    }
+  } catch (e) {
+    // No redirect result or error - ignore silently
+  }
+})();
 
 /**
  * Entry point for the React application.

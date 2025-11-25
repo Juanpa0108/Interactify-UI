@@ -33,27 +33,27 @@ const RequireAuth: React.FC<Props> = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Subscribe to Firebase auth state changes. The callback is invoked once
-    // Firebase resolves the current user which allows us to reliably decide
-    // if the session is active.
+    // First, check the cached current user synchronously. If a user is
+    // already available (cached by Firebase), we can immediately mark the
+    // session as authenticated which avoids flicker or unnecessary redirects
+    // during fast client-side navigation.
+    const current = auth.currentUser;
+    if (current) {
+      setAuthenticated(true);
+      setChecking(false);
+      return;
+    }
+
+    // Otherwise subscribe to auth state changes. Do NOT force a timeout
+    // that treats the user as unauthenticated — transient delays in the
+    // auth SDK or network should not cause an immediate redirect.
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthenticated(!!user);
       setChecking(false);
     });
 
-    // Failsafe: if Firebase does not call back within a short window, stop
-    // waiting so the UI doesn't hang indefinitely. This treats the user as
-    // unauthenticated after the timeout.
-    const timeout = setTimeout(() => {
-      if (checking) {
-        setChecking(false);
-        setAuthenticated(false);
-      }
-    }, 3000);
-
     return () => {
       unsubscribe();
-      clearTimeout(timeout);
     };
   }, []);
 
