@@ -1,7 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar/Navbar";
-import Footer from "./components/Footer/Footer";
-import RequireAuth from "./components/RequireAuth";
+
 
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
@@ -10,6 +8,9 @@ import CreateMeeting from "./pages/Meeting/CreateMeeting";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import EditProfile from "./pages/EditProfile";
+import Navbar from "./components/Navbar/Navbar";
+import RequireAuth from "./components/RequireAuth";
+import Footer from "./components/Footer/Footer";
 
 const App: React.FC = () => {
   /**

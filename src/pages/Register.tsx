@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
-import { auth, googleProvider, githubProvider } from '../config/firebase';
-import '../styles/Register.css';
+import { auth, githubProvider, googleProvider } from '../config/firebase';
+
 
 const MIN_AGE = 13;
 const MIN_PWD_LENGTH = 6; // Cambiado a 6 según los requisitos

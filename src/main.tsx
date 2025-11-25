@@ -9,6 +9,7 @@ import ErrorBoundary from './ErrorBoundary';
 import { getRedirectResult } from 'firebase/auth';
 import { auth } from './config/firebase';
 
+
 // If the app was invoked as the result of an OAuth redirect (signInWithRedirect),
 // process the redirect result and, if a user was returned, call the backend
 // to complete server-side verification and persist the token in localStorage.

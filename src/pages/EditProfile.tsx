@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../config/firebase';
+
 import type { User } from 'firebase/auth';
 import '../styles/Register.css';
+import { auth } from '../config/firebase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ENDPOINT_GET = `${API_URL}/api/user/profile`;
