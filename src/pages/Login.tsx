@@ -127,7 +127,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="auth-page">
+    <div className="auth-page login-bg">
       <div className="auth-wrapper">
         <div className="auth-image"><img src={imgSrc} alt="Team working" /></div>
 
@@ -135,28 +135,28 @@ const Login: React.FC = () => {
           <div className="auth-card-inner">
             <div className="auth-header">
               <img src={logoSrc} alt="logo" className="auth-logo" />
-              <h1>Login</h1>
+              <h1>Iniciar sesión</h1>
             </div>
-            <p className="lead">Welcome back — sign in to continue to Interactify.</p>
+            <p className="lead">Bienvenido de nuevo — inicia sesión para continuar en Interactify.</p>
 
             {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleEmailLogin}>
-              <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
               <div style={{ position: 'relative', width: '100%' }}>
-                <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
+                <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
                 <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 4, cursor: 'pointer' }}>
                   {showPassword ? '🙈' : '👁️'}
                 </button>
               </div>
 
-              <div className="auth-row"><a className="auth-link" href="#">Forgot password?</a></div>
+              <div className="auth-row"><a className="auth-link" href="#">¿Olvidaste tu contraseña?</a></div>
 
-              <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Iniciando sesión...' : 'Log in'}</button>
+              <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Iniciando sesión...' : 'Iniciar sesión'}</button>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                <small className="small">Or continue with</small>
+                <small className="small">O continúa con</small>
                 <div className="social-row">
                   <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button>
                   <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button>
@@ -164,8 +164,8 @@ const Login: React.FC = () => {
               </div>
 
               <div style={{ textAlign: 'center', marginTop: 12 }}>
-                <span className="small">Don't have an account? </span>
-                <Link className="auth-link" to="/register">Create an account</Link>
+                <span className="small">¿No tienes una cuenta? </span>
+                <Link className="auth-link" to="/register">Crear una cuenta</Link>
               </div>
             </form>
           </div>
