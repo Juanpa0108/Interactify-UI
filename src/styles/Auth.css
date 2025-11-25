@@ -70,24 +70,25 @@
 
 .auth-card-inner { display: flex; flex-direction: column; flex: 1 1 auto; }
 
-.auth-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+/* Azul oscuro: #1a237e */
+.auth-btn {
+  display: inline-block;
+  width: 100%;
+  padding: 12px 14px;
+  background: #1a237e;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(26,35,126,0.12);
 }
-
-.auth-logo {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
-  border-radius: 8px;
-  image-rendering: auto;
+.auth-link {
+  color: #1a237e;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
 }
-
-.auth-card h1 {
-  margin: 0;
-  font-size: 20px;
   color: #262626;
 }
 

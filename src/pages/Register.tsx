@@ -212,7 +212,7 @@ const Register: React.FC = () => {
               <h1>Registro</h1>
             </div>
 
-            <p className="lead">Create your account in seconds</p>
+            <p className="lead">Crea tu cuenta en segundos</p>
 
             {error && (
               <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>
@@ -223,26 +223,26 @@ const Register: React.FC = () => {
             <form className="auth-form" onSubmit={onSubmit} aria-describedby="register-help">
             <div className="input-row">
               <label>
-                <span className="sr-only">First name</span>
+                <span className="sr-only">Nombre</span>
                 <input
-                  aria-label="First name"
+                  aria-label="Nombre"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   type="text"
-                  placeholder="First name"
+                  placeholder="Nombre"
                   aria-invalid={submitted && !requirements.firstName}
                   required
                 />
               </label>
 
               <label>
-                <span className="sr-only">Last name</span>
+                <span className="sr-only">Apellido</span>
                 <input
-                  aria-label="Last name"
+                  aria-label="Apellido"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   type="text"
-                  placeholder="Last name"
+                  placeholder="Apellido"
                   aria-invalid={submitted && !requirements.lastName}
                   required
                 />
@@ -251,13 +251,13 @@ const Register: React.FC = () => {
 
             <div className="input-row">
               <label>
-                <span className="sr-only">Age</span>
+                <span className="sr-only">Edad</span>
                 <input
-                  aria-label="Age"
+                  aria-label="Edad"
                   value={age}
                   onChange={(e) => setAge(e.target.value)}
                   type="number"
-                  placeholder="Age"
+                  placeholder="Edad"
                   min={MIN_AGE}
                   aria-invalid={submitted && !requirements.ageOk}
                   required
@@ -265,13 +265,13 @@ const Register: React.FC = () => {
               </label>
 
               <label>
-                <span className="sr-only">Email address</span>
+                <span className="sr-only">Correo electrónico</span>
                 <input
-                  aria-label="Email address"
+                  aria-label="Correo electrónico"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   type="email"
-                  placeholder="Email address"
+                  placeholder="Correo electrónico"
                   required
                 />
               </label>
@@ -279,13 +279,13 @@ const Register: React.FC = () => {
 
             <div className="input-row">
               <label>
-                <span className="sr-only">Password</span>
+                <span className="sr-only">Contraseña</span>
                 <input
-                  aria-label="Password"
+                  aria-label="Contraseña"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   type="password"
-                  placeholder="Password"
+                  placeholder="Contraseña"
                   aria-describedby="pwd-req"
                   aria-invalid={submitted && !requirements.pwdLength}
                   required
@@ -293,13 +293,13 @@ const Register: React.FC = () => {
               </label>
 
               <label>
-                <span className="sr-only">Confirm password</span>
+                <span className="sr-only">Confirmar contraseña</span>
                 <input
-                  aria-label="Confirm password"
+                  aria-label="Confirmar contraseña"
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   type="password"
-                  placeholder="Confirm password"
+                  placeholder="Confirmar contraseña"
                   aria-invalid={submitted && !requirements.pwdMatch}
                   required
                 />
@@ -312,17 +312,17 @@ const Register: React.FC = () => {
               </div>
 
               <div className="req-list">
-                <div className={`req ${requirements.pwdLength ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>At least {MIN_PWD_LENGTH} characters</span></div>
-                <div className={`req ${requirements.pwdMatch ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Passwords match</span></div>
+                <div className={`req ${requirements.pwdLength ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Al menos {MIN_PWD_LENGTH} caracteres</span></div>
+                <div className={`req ${requirements.pwdMatch ? 'ok' : ''}`}><span className="dot" aria-hidden /><span>Las contraseñas coinciden</span></div>
               </div>
             </div>
 
             <button className="auth-btn" type="submit" disabled={loading}>
-              {loading ? 'Creando cuenta...' : 'Create an account'}
+              {loading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-              <small className="small">Already a member? </small>
+              <small className="small">¿Ya tienes una cuenta? </small>
               <div className="social-row" aria-hidden>
                 <button
                   type="button"
@@ -346,11 +346,11 @@ const Register: React.FC = () => {
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 12 }}>
-              <span className="small">Or </span>
-              <Link className="auth-link" to="/login">Log in</Link>
+              <span className="small">O </span>
+              <Link className="auth-link" to="/login">Iniciar sesión</Link>
             </div>
 
-            <div id="register-help" className="sr-only">Password must be at least {MIN_PWD_LENGTH} characters. Age must be {MIN_AGE} or older.</div>
+            <div id="register-help" className="sr-only">La contraseña debe tener al menos {MIN_PWD_LENGTH} caracteres. La edad debe ser {MIN_AGE} o mayor.</div>
             </form>
           </div>
         </div>
