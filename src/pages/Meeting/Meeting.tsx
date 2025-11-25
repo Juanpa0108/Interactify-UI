@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import "./Meeting.scss";
+import Chat from '../../components/Chat/Chat';
 
 /**
  * Meeting page component.
@@ -53,47 +54,13 @@ const Meeting: React.FC = () => {
           </p>
         </div>
 
-        {/* Panel de chat (mock / sin funcionalidad) */}
+        {/* Panel de chat: component real */}
         <aside
           className="meeting__chat-area"
           aria-label="Panel de chat de la reunión"
         >
           <h2 className="meeting__chat-title">Chat de la reunión</h2>
-
-          <div className="meeting__chat-messages">
-            <div className="meeting__chat-message meeting__chat-message--info">
-              <span className="meeting__chat-meta">Sistema</span>
-              <p className="meeting__chat-text">
-                El chat en tiempo real se agregará en el Sprint 2. Por ahora
-                esta sección solo muestra el diseño de la interfaz.
-              </p>
-            </div>
-
-            
-          </div>
-
-          <form className="meeting__chat-input" aria-disabled="true">
-            <label
-              htmlFor="chat-input-disabled"
-              className="meeting__chat-label"
-            >
-              Enviar mensaje
-            </label>
-            <input
-              id="chat-input-disabled"
-              type="text"
-              disabled
-              placeholder="El chat estará disponible próximamente."
-            />
-            <button type="button" disabled>
-              Enviar
-            </button>
-          </form>
-
-          <p className="meeting__hint">
-            Esta sección muestra cómo será la experiencia de chat, pero todavía
-            no envía ni recibe mensajes.
-          </p>
+          <Chat />
         </aside>
       </section>
     </div>

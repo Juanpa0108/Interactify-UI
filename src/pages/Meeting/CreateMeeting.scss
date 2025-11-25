@@ -30,4 +30,35 @@
     font-size: 0.9rem;
     opacity: 0.9;
   }
+
+  &__result {
+    margin-top: 1rem;
+
+    .meeting-link-row {
+      display: flex;
+      gap: 8px;
+
+      input {
+        flex: 1;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #fff;
+        color: #111;
+      }
+      button { padding: 8px 10px }
+    }
+
+    .toast {
+      margin-top: 8px;
+      background: #111;
+      color: #fff;
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .error { margin-top: 8px; color: #f59e0b }
+  }
 }
