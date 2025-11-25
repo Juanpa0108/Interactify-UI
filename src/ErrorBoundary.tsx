@@ -11,6 +11,7 @@ import React from 'react';
 type State = {
   hasError: boolean;
   error?: Error | string;
+  info?: string;
 };
 
 class ErrorBoundary extends React.Component<React.PropsWithChildren<object>, State> {
@@ -29,6 +30,12 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren<object>, Sta
     // in production (Sentry, LogRocket, etc.). Keep logs concise.
     // eslint-disable-next-line no-console
     console.error('Captured render error:', error, info);
+    // Save component stack to state so it can be shown in the UI for debugging
+    try {
+      this.setState({ info: info?.componentStack ?? JSON.stringify(info) });
+    } catch (e) {
+      // ignore
+    }
   }
 
   render() {
@@ -39,6 +46,18 @@ class ErrorBoundary extends React.Component<React.PropsWithChildren<object>, Sta
         <div style={{ padding: 24, color: '#b00020', fontFamily: 'system-ui, sans-serif' }}>
           <h2>Something went wrong while rendering the app</h2>
           <pre style={{ whiteSpace: 'pre-wrap' }}>{message}</pre>
+          {this.state.error && typeof this.state.error !== 'string' && (
+            <details style={{ marginTop: 12, whiteSpace: 'pre-wrap' }}>
+              <summary>Show stack</summary>
+              <code>{(this.state.error as Error).stack}</code>
+              {this.state.info && (
+                <>
+                  <hr />
+                  <code>{this.state.info}</code>
+                </>
+              )}
+            </details>
+          )}
           <p>Check the developer console for details.</p>
         </div>
       );

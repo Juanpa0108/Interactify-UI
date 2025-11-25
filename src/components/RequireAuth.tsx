@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { auth } from '../config/firebase';
 
 /**
@@ -56,6 +56,16 @@ const RequireAuth: React.FC<Props> = ({ children }) => {
       unsubscribe();
     };
   }, []);
+
+  // Allow a developer-friendly guest override using ?guest=1 in the URL
+  const location = useLocation();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('guest') === '1') {
+      setAuthenticated(true);
+      setChecking(false);
+    }
+  }, [location.search]);
 
   if (checking) {
     // A simple progressive state while the auth SDK determines the user.

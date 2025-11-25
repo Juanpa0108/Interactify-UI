@@ -1,0 +1,60 @@
+.chat-page {
+  max-width: 720px;
+  margin: 18px auto;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: transparent;
+  /* Give the chat card a fixed height so the input always remains inside.
+     If you prefer a different height, adjust this value or make it responsive. */
+  height: 560px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.chat-header { display:flex; justify-content:space-between; align-items:center }
+.status.online { color: #32cd32; font-weight:600 }
+.status.offline { color: #ff6b6b; font-weight:600 }
+.chat-controls { display:flex; gap:12px; align-items:center }
+.chat-controls input { flex:1; padding:8px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color:var(--text-color, #e6eef8) }
+.online-count { font-size: 0.9rem; color: rgba(230,238,248,0.7) }
+.chat-window { flex: 1 1 auto; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px }
+
+/* Message bubbles */
+.chat-message {
+  padding: 10px 12px;
+  border-radius: 12px;
+  max-width: 78%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.03);
+  color: #e6eef8; /* default readable on dark backgrounds */
+  align-self: flex-start;
+}
+.chat-message.mine {
+  background: linear-gradient(180deg,#0a84ff 0%, #0b6ef0 100%); /* blue gradient */
+  color: #ffffff; /* white text for contrast */
+  align-self: flex-end;
+  box-shadow: 0 6px 14px rgba(10,132,255,0.12);
+}
+
+.chat-message .meta { display:flex; justify-content:space-between; align-items:center; gap:8px }
+.meta { font-size:0.85rem; color: rgba(230,238,248,0.85); margin-bottom:6px }
+.username { margin-right:8px; font-weight:700; color: inherit; opacity:0.98 }
+.time { color: rgba(230,238,248,0.7); font-size:0.75rem }
+.text { margin-top:2px; font-size:1rem; line-height:1.35 }
+
+.chat-input { display:flex; gap:8px; padding-top:8px; align-items:center }
+.chat-input input { flex:1; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); color:#e6eef8; outline:none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) }
+.chat-input input::placeholder { color: rgba(230,238,248,0.45) }
+.chat-input button { padding:8px 14px; border-radius:8px; background:#3b82f6; color:white; border:none; cursor:pointer }
+.chat-input button:active { transform:translateY(1px) }
+
+/* ensure controls input placeholder contrast */
+.chat-controls input::placeholder { color: rgba(230,238,248,0.45) }
+
+/* responsive */
+@media (max-width:480px){
+  .chat-page{padding:10px}
+  .chat-message{max-width:92%}
+}
