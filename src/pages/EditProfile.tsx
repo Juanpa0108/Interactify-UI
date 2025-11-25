@@ -1,102 +1,135 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Register.css';
 
-const ENDPOINT_GET = '/api/user/profile';
-const ENDPOINT_UPDATE = '/api/user/update';
+import type { User } from 'firebase/auth';
+import '../styles/Register.css';
+import { auth } from '../config/firebase';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const ENDPOINT_GET = `${API_URL}/api/user/profile`;
+const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
 
 type UserData = {
 	firstName: string;
 	lastName: string;
-	age: number;
 	email: string;
-	password: string;
 };
 
 const EditProfile: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<UserData | null>(null);
-	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', age: 0, email: '', password: '' });
+	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', email: '' });
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
-	const [token, setToken] = useState<string | null>(null);
+	const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 	const [changed, setChanged] = useState(false);
 	const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
-		const t = localStorage.getItem('token');
-		setToken(t);
-		if (!t) {
-			navigate('/login');
-		}
+		const unsubscribe = auth.onAuthStateChanged((fbUser) => {
+			if (!fbUser) {
+				setFirebaseUser(null);
+				setUser(null);
+				setForm({ firstName: '', lastName: '', email: '' });
+				navigate('/login');
+				return;
+			}
+			setFirebaseUser(fbUser);
+		});
+
+		return () => unsubscribe();
 	}, [navigate]);
 
 	useEffect(() => {
-		if (!token) return;
-		setLoading(true);
-		setError('');
-		fetch(ENDPOINT_GET, {
-			method: 'GET',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json',
-			},
-		})
-			.then(async (res) => {
+		if (!firebaseUser) return;
+		
+		const fetchProfile = async () => {
+			setLoading(true);
+			setError('');
+			
+			try {
+				const idToken = await firebaseUser.getIdToken();
+				
+				const res = await fetch(ENDPOINT_GET, {
+					method: 'GET',
+					headers: {
+						'Authorization': `Bearer ${idToken}`,
+						'Content-Type': 'application/json',
+					},
+				});
+				
 				if (!res.ok) throw new Error('No se pudo cargar el perfil');
 				const data = await res.json();
 				setUser(data);
-				setForm(data);
+				setForm({
+					firstName: data.firstName || '',
+					lastName: data.lastName || '',
+					email: data.email || '',
+				});
 				setLoading(false);
-			})
-			.catch((err) => {
+			} catch (err: any) {
 				setError(err.message);
 				setLoading(false);
-			});
-	}, [token]);
+			}
+		};
+		
+		void fetchProfile();
+	}, [firebaseUser]);
 
 	useEffect(() => {
 		if (!user) return;
 		setChanged(
 			form.firstName !== user.firstName ||
-			form.lastName !== user.lastName ||
-			form.age !== user.age ||
-			form.email !== user.email ||
-			form.password !== user.password
+			form.lastName !== user.lastName
 		);
 	}, [form, user]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: name === 'age' ? Number(value) : value }));
+		setForm((prev) => ({ ...prev, [name]: value }));
 	};
 
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setSaving(true);
 		setError('');
-		fetch(ENDPOINT_UPDATE, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(form),
-		})
-			.then(async (res) => {
-				if (!res.ok) throw new Error('No se pudo guardar');
-				const updated = await res.json();
-				setUser(updated);
-				setSaving(false);
-				setChanged(false);
-			})
-			.catch((err) => {
-				setError(err.message);
-				setSaving(false);
+		
+		try {
+			if (!firebaseUser) {
+				throw new Error('Usuario no autenticado');
+			}
+			
+			const idToken = await firebaseUser.getIdToken();
+			
+			const res = await fetch(ENDPOINT_UPDATE, {
+				method: 'POST',
+				headers: {
+					'Authorization': `Bearer ${idToken}`,
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					firstName: form.firstName,
+					lastName: form.lastName,
+				}),
 			});
+			
+			if (!res.ok) throw new Error('No se pudo guardar');
+			const updated = await res.json();
+			setUser(updated.user);
+			setForm({
+				...form,
+				firstName: updated.user.firstName,
+				lastName: updated.user.lastName,
+			});
+			setSaving(false);
+			setChanged(false);
+		} catch (err: any) {
+			setError(err.message);
+			setSaving(false);
+		}
 	};
 
-	if (!token) {
+	if (!firebaseUser) {
 		return null;
 	}
 
@@ -104,12 +137,12 @@ const EditProfile: React.FC = () => {
 		<div className="auth-page">
 			<div className="auth-wrapper">
 				<div className="auth-image" aria-hidden="true">
-					<img src={import.meta.env.PUBLIC_URL + '/registerImage.avif'} alt="Edit profile" />
+					<img src={'/registerImage.avif'} alt="Edit profile" />
 				</div>
 				<div className="auth-card">
 					<div className="auth-card-inner">
 						<div className="auth-header">
-							<img src={import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
+							<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
 							<h1>Editar perfil</h1>
 						</div>
 						<p className="lead">Modifica tus datos personales</p>
@@ -145,39 +178,14 @@ const EditProfile: React.FC = () => {
 								</div>
 								<div className="input-row">
 									<label>
-										<span className="sr-only">Age</span>
-										<input
-											name="age"
-											type="number"
-											value={form.age}
-											onChange={handleChange}
-											placeholder="Age"
-											min={13}
-											required
-										/>
-									</label>
-									<label>
 										<span className="sr-only">Email address</span>
 										<input
 											name="email"
 											type="email"
 											value={form.email}
-											onChange={handleChange}
 											placeholder="Email address"
-											required
-										/>
-									</label>
-								</div>
-								<div className="input-row">
-									<label>
-										<span className="sr-only">Password</span>
-										<input
-											name="password"
-											type="password"
-											value={form.password}
-											onChange={handleChange}
-											placeholder="Password"
-											required
+											disabled
+											style={{ opacity: 0.6, cursor: 'not-allowed' }}
 										/>
 									</label>
 								</div>

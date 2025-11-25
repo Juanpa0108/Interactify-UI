@@ -13,7 +13,7 @@ const CreateMeeting: React.FC = () => {
 
   useEffect(() => {
     // Comprobamos si el usuario está autenticado
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("token") || localStorage.getItem("authToken");
     if (!token) {
       // Si no está autenticado, redirigimos a login
       navigate("/login");

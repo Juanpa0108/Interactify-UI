@@ -1,29 +1,129 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+
 import '../styles/Login.css';
+import { auth, githubProvider, googleProvider } from '../config/firebase';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const imgSrc = '/loginImage.png';
+  const logoSrc = '/logoInteractify.jpeg';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const imgSrc = import.meta.env.PUBLIC_URL + '/loginImage.png';
-  const logoSrc = import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg';
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    // Simulamos proceso de autenticación.
-    if (email === "user@example.com" && password === "password123!") {
-      // Guardamos el token 
-      const token = "sample-auth-token";
-      localStorage.setItem('authToken', token);  // Guardamos el token
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
 
-      // Redirigimos a la página de creación de reuniones o home
-      navigate('/create');
-    } else {
-      alert("Credenciales incorrectas");
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Login failed');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('authToken', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user || userCredential.user));
+      navigate('/');
+    } catch (err: any) {
+      console.error('Error en login:', err);
+      setError(err.message || 'Error al iniciar sesión');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      // Autenticar con Google usando Firebase
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      // Verificar con el backend
+      const response = await fetch(`${API_URL}/api/auth/login/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al iniciar sesión con Google');
+      }
+
+      const data = await response.json();
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('authToken', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      navigate('/');
+    } catch (err: any) {
+      console.error('Error en login con Google:', err);
+      const msg = String(err?.message || err);
+      // If popup fails due to COOP/popup blocking, fall back to redirect flow
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return; // redirect started; user will be returned to app
+        } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
+        }
+      }
+
+      setError(err.message || 'Error al iniciar sesión con Google');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGitHubLogin = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const result = await signInWithPopup(auth, githubProvider);
+      const idToken = await result.user.getIdToken();
+      const response = await fetch(`${API_URL}/api/auth/login/github`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }),
+      });
+      if (!response.ok) throw new Error('Login with GitHub failed');
+      const data = await response.json();
+      localStorage.setItem('token', idToken);
+      localStorage.setItem('authToken', idToken);
+      localStorage.setItem('user', JSON.stringify(data.user || result.user));
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      const msg = String(err?.message || err);
+      if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
+        try {
+          await signInWithRedirect(auth, githubProvider);
+          return;
+        } catch (redirectErr) {
+          console.error('Redirect fallback failed:', redirectErr);
+        }
+      }
+
+      setError(err.message || 'Error al iniciar sesión con GitHub');
+    } finally { setLoading(false); }
   };
 
   return (
@@ -39,34 +139,27 @@ const Login: React.FC = () => {
             </div>
             <p className="lead">Welcome back — sign in to continue to Interactify.</p>
 
-            <form className="auth-form" onSubmit={handleLogin}>
-              <input 
-                type="email" 
-                placeholder="Email address" 
-                required 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-              />
+            {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>{error}</div>}
 
-              <input 
-                type="password" 
-                placeholder="Password" 
-                required 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-              />
+            <form className="auth-form" onSubmit={handleEmailLogin}>
+              <input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
-              <div className="auth-row">
-                <a className="auth-link" href="#">Forgot password?</a>
+              <div style={{ position: 'relative', width: '100%' }}>
+                <input type={showPassword ? 'text' : 'password'} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
+                <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 4, cursor: 'pointer' }}>
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
               </div>
 
-              <button className="auth-btn" type="submit">Log in</button>
+              <div className="auth-row"><a className="auth-link" href="#">Forgot password?</a></div>
+
+              <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Iniciando sesión...' : 'Log in'}</button>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                 <small className="small">Or continue with</small>
                 <div className="social-row">
-                  <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/googleLogo.png'} alt="google" style={{ height:18 }} /></div>
-                  <div className="social-btn"><img src={import.meta.env.PUBLIC_URL + '/githubLogo.png'} alt="github" style={{ height:18 }} /></div>
+                  <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button>
+                  <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button>
                 </div>
               </div>
 
@@ -83,3 +176,4 @@ const Login: React.FC = () => {
 };
 
 export default Login;
+ 
