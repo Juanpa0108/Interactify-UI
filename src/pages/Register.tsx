@@ -54,17 +54,18 @@ const Register: React.FC = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Registrar en el backend con información adicional
+      // Registrar en el backend: enviamos el idToken para que el servidor verifique
+      // y cree el perfil en Firestore (evita intentar crear el usuario dos veces).
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          idToken,
           firstName,
           lastName,
           email,
-          password, // El backend no lo usará porque Firebase ya lo maneja, pero lo enviamos por compatibilidad
         }),
       });
 
