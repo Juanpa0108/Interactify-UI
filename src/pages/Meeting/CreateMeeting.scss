@@ -33,32 +33,85 @@
 
   &__result {
     margin-top: 1rem;
-
-    .meeting-link-row {
-      display: flex;
-      gap: 8px;
-
-      input {
-        flex: 1;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        background: #fff;
-        color: #111;
-      }
-      button { padding: 8px 10px }
-    }
-
-    .toast {
-      margin-top: 8px;
-      background: #111;
-      color: #fff;
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-    }
-
-    .error { margin-top: 8px; color: #f59e0b }
   }
+
+  &__subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &__hint {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  &__label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: left;
+    font-size: 0.85rem;
+    margin-top: 0.75rem;
+  }
+}
+
+/* fila del link + botones */
+.meeting-link-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+
+  input {
+    width: 100%;
+    padding: 0.45rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.6);
+    background: rgba(15, 23, 42, 0.95);
+    color: $color-text;
+    font-size: 0.9rem;
+  }
+}
+
+.create-meeting__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* estilos básicos de botones por si no los tienes aún */
+.btn {
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.btn--ghost {
+  border-color: rgba(148, 163, 184, 0.6);
+  background: transparent;
+  color: $color-text;
+}
+
+.btn--primary {
+  background: $color-primary;
+  color: #0f172a;
+}
+
+/* toast y error */
+.toast {
+  margin-top: 8px;
+  background: #111827;
+  color: #f9fafb;
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.error {
+  margin-top: 8px;
+  color: #f59e0b;
 }

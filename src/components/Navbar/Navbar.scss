@@ -43,29 +43,48 @@
       opacity 0.15s ease,
       border-color 0.15s ease,
       transform 0.15s ease;
+    color: $color-text;              // ← aquí damos color claro
+    background: none;
+    border: none;
+    cursor: pointer;
+    /* para que funcione bien tanto en <a> como en <button> */
+    display: inline-flex;
+    align-items: center;
 
     &:hover,
     &:focus-visible {
       opacity: 1;
       transform: translateY(-1px);
     }
+  }
 
-    &--active {
-      opacity: 1;
+  .navbar__link--active {
+    opacity: 1;
+    border-color: $color-primary;
+  }
+
+  &__link--primary {
+    padding: 0.4rem 0.9rem;
+    border-radius: 9999px;
+    border-bottom: none;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(15, 23, 42, 0.95);
+
+    &.navbar__link--active {
       border-color: $color-primary;
+      background: $color-primary;
+      color: #0f172a;
     }
+  }
 
-    &--primary {
-      padding: 0.4rem 0.9rem;
-      border-radius: 9999px;
-      border-bottom: none;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.95);
+  &__link--logout {
+    /* estilo opcional para resaltar el logout */
+    color: #fecaca; // rojo suave
+    border-bottom-color: transparent;
 
-      &.navbar__link--active {
-        border-color: $color-primary;
-        background: $color-primary;
-      }
+    &:hover,
+    &:focus-visible {
+      color: #fee2e2;
     }
   }
 }
