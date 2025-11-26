@@ -79,7 +79,7 @@
 
   &__link--logout {
     /* estilo opcional para resaltar el logout */
-    color: #fecaca; // rojo suave
+    color: $color-text;
     border-bottom-color: transparent;
 
     &:hover,

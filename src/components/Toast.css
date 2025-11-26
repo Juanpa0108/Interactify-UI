@@ -1,0 +1,23 @@
+/* Toast styles */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  max-width: 90vw;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1a237e;
+  box-shadow: 0 4px 24px rgba(20,30,60,0.12);
+  z-index: 9999;
+  text-align: center;
+  opacity: 0.98;
+  transition: opacity 0.2s;
+}
+.toast--success { background: #22c55e; }
+.toast--error { background: #e53935; }
+.toast--info { background: #4f46e5; }
