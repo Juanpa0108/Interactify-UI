@@ -1,12 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { auth } from '../config/firebase';
+import React, { useEffect, useState } from "react";
+import { Navigate } from "react-router-dom";
+import { auth } from "../config/firebase";
 
-/**
- * Props accepted by RequireAuth.
- * `children` is the protected element tree that should only render when
- * the user is authenticated.
- */
 type Props = {
   children: React.ReactNode;
 };
@@ -22,21 +17,12 @@ type Props = {
  *   "Checking session..." placeholder to avoid flashing protected UI.
  * - If the user is authenticated, it renders `children`.
  * - If the user is not authenticated, it redirects to `/login`.
- *
- * Implementation notes:
- * - We rely only on Firebase's auth state instead of `localStorage` tokens
- *   because localStorage can be stale or forged. Firebase is the source of
- *   truth for session validity.
  */
 const RequireAuth: React.FC<Props> = ({ children }) => {
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    // First, check the cached current user synchronously. If a user is
-    // already available (cached by Firebase), we can immediately mark the
-    // session as authenticated which avoids flicker or unnecessary redirects
-    // during fast client-side navigation.
     const current = auth.currentUser;
     if (current) {
       setAuthenticated(true);
@@ -44,9 +30,6 @@ const RequireAuth: React.FC<Props> = ({ children }) => {
       return;
     }
 
-    // Otherwise subscribe to auth state changes. Do NOT force a timeout
-    // that treats the user as unauthenticated — transient delays in the
-    // auth SDK or network should not cause an immediate redirect.
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthenticated(!!user);
       setChecking(false);
@@ -57,24 +40,10 @@ const RequireAuth: React.FC<Props> = ({ children }) => {
     };
   }, []);
 
-  // Allow a developer-friendly guest override using ?guest=1 in the URL
-  const location = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('guest') === '1') {
-      setAuthenticated(true);
-      setChecking(false);
-    }
-  }, [location.search]);
-
   if (checking) {
-    // A simple progressive state while the auth SDK determines the user.
     return <div style={{ padding: 20 }}>Checking session...</div>;
   }
 
-  // If authenticated, render the protected children; otherwise redirect.
-  // Return `children` directly wrapped in a fragment to preserve the
-  // ReactNode type and avoid relying on the global `JSX` namespace.
   return authenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 

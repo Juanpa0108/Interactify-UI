@@ -1,20 +1,26 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./Meeting.scss";
-import Chat from '../../components/Chat/Chat';
+import Chat from "../../components/Chat/Chat";
 
 /**
  * Meeting page component.
- * Shows the base layout for the video area and chat sidebar without real-time functionality.
+ * Shows the base layout for the video area and chat sidebar with real chat component.
  */
 const Meeting: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const meetingUrl = window.location.href;
+
+  const handleLeaveMeeting = () => {
+    // Aquí puedes limpiar estado adicional si lo necesitan (cerrar sockets, etc.)
+    navigate("/", { replace: true });
+  };
 
   return (
     <div className="meeting app-content">
       <header className="meeting__header">
-        <div>
+        <div className="meeting__header-left">
           <h1>Reunión</h1>
           <p className="meeting__info">
             ID de la reunión: <span className="meeting__id">{id}</span>
@@ -23,6 +29,16 @@ const Meeting: React.FC = () => {
             Comparte este enlace con tu equipo para que puedan unirse:
             <span className="meeting__link">{meetingUrl}</span>
           </p>
+        </div>
+
+        <div className="meeting__header-actions">
+          <button
+            type="button"
+            className="btn btn--ghost meeting__leave-btn"
+            onClick={handleLeaveMeeting}
+          >
+            Salir de la reunión
+          </button>
         </div>
       </header>
 

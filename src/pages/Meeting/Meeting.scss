@@ -5,6 +5,23 @@
 
   &__header {
     margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  &__header-left {
+    max-width: 70%;
+  }
+
+  &__header-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  &__leave-btn {
+    font-size: 0.85rem;
   }
 
   &__info {
