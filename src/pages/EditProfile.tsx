@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import Toast from '../components/Toast';
+import '../components/Toast.css';
 import { useNavigate } from 'react-router-dom';
 
 import type { User } from 'firebase/auth';
-import '../styles/Register.css';
+import '../styles/EditProfile.css';
 import { auth } from '../config/firebase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -24,6 +26,7 @@ const EditProfile: React.FC = () => {
 	const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 	const [changed, setChanged] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [showToast, setShowToast] = useState(false);
 
 	useEffect(() => {
 		const unsubscribe = auth.onAuthStateChanged((fbUser) => {
@@ -93,14 +96,11 @@ const EditProfile: React.FC = () => {
 		e.preventDefault();
 		setSaving(true);
 		setError('');
-		
 		try {
 			if (!firebaseUser) {
 				throw new Error('Usuario no autenticado');
 			}
-			
 			const idToken = await firebaseUser.getIdToken();
-			
 			const res = await fetch(ENDPOINT_UPDATE, {
 				method: 'POST',
 				headers: {
@@ -112,7 +112,6 @@ const EditProfile: React.FC = () => {
 					lastName: form.lastName,
 				}),
 			});
-			
 			if (!res.ok) throw new Error('No se pudo guardar');
 			const updated = await res.json();
 			setUser(updated.user);
@@ -123,6 +122,8 @@ const EditProfile: React.FC = () => {
 			});
 			setSaving(false);
 			setChanged(false);
+			setShowToast(true);
+			setTimeout(() => setShowToast(false), 2500);
 		} catch (err: any) {
 			setError(err.message);
 			setSaving(false);
@@ -134,71 +135,72 @@ const EditProfile: React.FC = () => {
 	}
 
 	return (
-		<div className="auth-page">
-			<div className="auth-wrapper">
+		<div className="edit-profile-page">
+			<div className="edit-profile-wrapper">
 				<div className="auth-image" aria-hidden="true">
 					<img src={'/registerImage.avif'} alt="Edit profile" />
 				</div>
-				<div className="auth-card">
-					<div className="auth-card-inner">
-						<div className="auth-header">
-							<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
-							<h1>Editar perfil</h1>
-						</div>
-						<p className="lead">Modifica tus datos personales</p>
-						{loading ? (
-							<p>Cargando…</p>
-						) : error ? (
-							<p style={{ color: 'red' }}>{error}</p>
-						) : (
-							<form className="auth-form" onSubmit={handleSave}>
-								<div className="input-row">
-									<label>
-										<span className="sr-only">First name</span>
-										<input
-											name="firstName"
-											type="text"
-											value={form.firstName}
-											onChange={handleChange}
-											placeholder="First name"
-											required
-										/>
-									</label>
-									<label>
-										<span className="sr-only">Last name</span>
-										<input
-											name="lastName"
-											type="text"
-											value={form.lastName}
-											onChange={handleChange}
-											placeholder="Last name"
-											required
-										/>
-									</label>
-								</div>
-								<div className="input-row">
-									<label>
-										<span className="sr-only">Email address</span>
-										<input
-											name="email"
-											type="email"
-											value={form.email}
-											placeholder="Email address"
-											disabled
-											style={{ opacity: 0.6, cursor: 'not-allowed' }}
-										/>
-									</label>
-								</div>
-								<button className="auth-btn" type="submit" disabled={!changed || saving}>
-									{saving ? 'Guardando…' : 'Guardar cambios'}
-								</button>
-							</form>
-						)}
+				<div className="edit-profile-card">
+					<div className="auth-header">
+						<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
+						<h1>Editar perfil</h1>
 					</div>
+					<p className="lead">Modifica tus datos personales</p>
+					{loading ? (
+						<p>Cargando…</p>
+					) : error ? (
+						<p style={{ color: 'red' }}>{error}</p>
+					) : (
+						<form className="edit-profile-form" onSubmit={handleSave}>
+							<div className="input-row">
+								<label>
+									<span className="sr-only">First name</span>
+									<input
+										name="firstName"
+										type="text"
+										value={form.firstName}
+										onChange={handleChange}
+										placeholder="First name"
+										required
+									/>
+								</label>
+								<label>
+									<span className="sr-only">Last name</span>
+									<input
+										name="lastName"
+										type="text"
+										value={form.lastName}
+										onChange={handleChange}
+										placeholder="Last name"
+										required
+									/>
+								</label>
+							</div>
+							<div className="input-row">
+								<label>
+									<span className="sr-only">Email address</span>
+									<input
+										name="email"
+										type="email"
+										value={form.email}
+										placeholder="Email address"
+										disabled
+										style={{ opacity: 0.6, cursor: 'not-allowed' }}
+									/>
+								</label>
+							</div>
+							<button className="edit-profile-btn" type="submit" disabled={!changed || saving}>
+								{saving ? 'Guardando…' : 'Guardar cambios'}
+							</button>
+						</form>
+					)}
+					{showToast && (
+						<Toast message="¡Cambios guardados correctamente!" type="success" />
+					)}
 				</div>
 			</div>
 		</div>
-	);
+  );
 };
 
 export default EditProfile;

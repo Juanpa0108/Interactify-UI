@@ -5,7 +5,7 @@ const About: React.FC = () => {
     <div className="about app-content">
       <h1>Sobre Interactify</h1>
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.5rem' }}>
-        <img src={import.meta.env.PUBLIC_URL + '/logoInteractify.jpeg'} alt="Logo Interactify" style={{ height: 80, width: 80, objectFit: 'contain', borderRadius: 16 }} />
+        <img src={'/logoInteractify.jpeg'} alt="Logo Interactify" style={{ height: 200, width: 200, objectFit: 'contain', borderRadius: 32 }} />
       </div>
       <p>
         Interactify es una empresa dedicada al desarrollo de soluciones innovadoras 
