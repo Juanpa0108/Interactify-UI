@@ -21,6 +21,11 @@ const Chat: React.FC<Props> = ({ initialName }) => {
   const socketRef = useRef<any>(null);
 
   useEffect(() => {
+    // If an initialName is provided (from profile), ensure it's set
+    // and announced to the server immediately.
+    if (initialName) {
+      setName(initialName);
+    }
     const socket = socketService.connectSocket();
     socketRef.current = socket;
 
@@ -41,6 +46,12 @@ const Chat: React.FC<Props> = ({ initialName }) => {
       socketService.disconnectSocket();
     };
   }, []);
+
+  // If the parent later provides an initialName (profile fetched after mount),
+  // update the local name and announce it via the existing name effect.
+  useEffect(() => {
+    if (initialName) setName(initialName);
+  }, [initialName]);
 
   useEffect(() => {
     // When name changes and socket available, announce user
@@ -74,7 +85,13 @@ const Chat: React.FC<Props> = ({ initialName }) => {
       </div>
 
       <div className="chat-controls">
-        <input placeholder="Your display name" value={name} onChange={e => setName(e.target.value)} />
+        <input
+          placeholder="Your display name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          disabled={!!initialName}
+          title={initialName ? 'El nombre proviene de tu perfil y no es editable' : undefined}
+        />
         <div className="online-count">Online: {online.length}</div>
       </div>
 
