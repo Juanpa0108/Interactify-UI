@@ -22,10 +22,18 @@ import { auth } from './config/firebase';
       try {
         const idToken = await result.user.getIdToken();
         // Try to guess provider path (google/github) from credential if available
-        const providerId = (result as any)?.providerId || (result as any)?.credential?.providerId || '';
+        // Try several places for the provider id: some SDK results include it
+        // on the top-level result, others include it on `credential`, and the
+        // most reliable is the user's providerData array populated by Firebase.
+        const providerId =
+          (result as any)?.providerId ||
+          (result as any)?.credential?.providerId ||
+          (result as any)?.user?.providerData?.[0]?.providerId ||
+          '';
+
         let path = '/api/auth/login';
-        if (/google/i.test(providerId)) path = '/api/auth/login/google';
-        else if (/github/i.test(providerId)) path = '/api/auth/login/github';
+        if (/google/i.test(providerId) || /google\.com/i.test(providerId)) path = '/api/auth/login/google';
+        else if (/github/i.test(providerId) || /github\.com/i.test(providerId)) path = '/api/auth/login/github';
 
         const resp = await fetch(`${API_URL}${path}`, {
           method: 'POST',
