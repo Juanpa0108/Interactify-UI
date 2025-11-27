@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Loader from '../components/Loader';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
@@ -141,33 +142,32 @@ const Login: React.FC = () => {
 
             {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>{error}</div>}
 
-            <form className="auth-form" onSubmit={handleEmailLogin}>
-              <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-              <div style={{ position: 'relative', width: '100%' }}>
-                <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
-                <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 4, cursor: 'pointer' }}>
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
-
-              <div className="auth-row"><a className="auth-link" href="#">¿Olvidaste tu contraseña?</a></div>
-
-              <button className="auth-btn" type="submit" disabled={loading}>{loading ? 'Iniciando sesión...' : 'Iniciar sesión'}</button>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                <small className="small">O continúa con</small>
-                <div className="social-row">
-                  <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button>
-                  <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button>
+            {loading ? (
+              <Loader />
+            ) : (
+              <form className="auth-form" onSubmit={handleEmailLogin}>
+                <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <div style={{ position: 'relative', width: '100%' }}>
+                  <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
+                  <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 4, cursor: 'pointer' }}>
+                    {showPassword ? '🙈' : '👁️'}
+                  </button>
                 </div>
-              </div>
-
-              <div style={{ textAlign: 'center', marginTop: 12 }}>
-                <span className="small">¿No tienes una cuenta? </span>
-                <Link className="auth-link" to="/register">Crear una cuenta</Link>
-              </div>
-            </form>
+                <div className="auth-row"><a className="auth-link" href="#">¿Olvidaste tu contraseña?</a></div>
+                <button className="auth-btn" type="submit" disabled={loading}>{'Iniciar sesión'}</button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                  <small className="small">O continúa con</small>
+                  <div className="social-row">
+                    <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button>
+                    <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button>
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: 12 }}>
+                  <span className="small">¿No tienes una cuenta? </span>
+                  <Link className="auth-link" to="/register">Crear una cuenta</Link>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
