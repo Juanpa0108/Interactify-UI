@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { createUserWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, githubProvider, googleProvider } from '../config/firebase';
 
@@ -10,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const imgSrc = '/registerImage.avif';
   const logoSrc = '/logoInteractify.jpeg';
 
@@ -79,8 +80,10 @@ const Register: React.FC = () => {
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(userCredential.user));
 
-      // Redirigir al home o dashboard
-      navigate('/');
+      // Redirect back to the intended route (meeting link) if present
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Error en registro:', err);
       let errorMessage = 'Error al crear la cuenta';
@@ -138,6 +141,8 @@ const Register: React.FC = () => {
       const msg = String(err?.message || err);
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
+          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
+          sessionStorage.setItem('postAuthRedirect', intended);
           await signInWithRedirect(auth, googleProvider);
           return;
         } catch (redirectErr) {
@@ -181,13 +186,16 @@ const Register: React.FC = () => {
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirigir al home
-      navigate('/');
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Error en login con GitHub:', err);
       const msg = String(err?.message || err);
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
+          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
+          sessionStorage.setItem('postAuthRedirect', intended);
           await signInWithRedirect(auth, githubProvider);
           return;
         } catch (redirectErr) {

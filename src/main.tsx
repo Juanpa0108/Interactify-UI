@@ -46,8 +46,14 @@ import { auth } from './config/firebase';
           localStorage.setItem('token', idToken);
           localStorage.setItem('authToken', idToken);
           localStorage.setItem('user', JSON.stringify(data.user || result.user));
-          // Ensure the app navigates to home after redirect login
-          try { window.history.replaceState({}, '', '/'); } catch (e) {}
+          // Ensure the app navigates to the intended route after redirect login.
+          // We store the intended path in `sessionStorage.postAuthRedirect` before
+          // starting a redirect-based OAuth flow so we can restore it here.
+          try {
+            const redirectTo = sessionStorage.getItem('postAuthRedirect') || '/';
+            window.history.replaceState({}, '', redirectTo);
+            sessionStorage.removeItem('postAuthRedirect');
+          } catch (e) {}
         } else {
           console.warn('[getRedirectResult] backend login failed', await resp.text());
         }
