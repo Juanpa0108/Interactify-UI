@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { auth } from "../config/firebase";
 
 type Props = {
@@ -19,6 +19,7 @@ type Props = {
  * - If the user is not authenticated, it redirects to `/login`.
  */
 const RequireAuth: React.FC<Props> = ({ children }) => {
+  const location = useLocation();
   const [checking, setChecking] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
 
@@ -44,7 +45,11 @@ const RequireAuth: React.FC<Props> = ({ children }) => {
     return <div style={{ padding: 20 }}>Checking session...</div>;
   }
 
-  return authenticated ? <>{children}</> : <Navigate to="/login" replace />;
+  return authenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/login" replace state={{ from: location }} />
+  );
 };
 
 export default RequireAuth;
