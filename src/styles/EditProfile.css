@@ -20,11 +20,11 @@
 
 .edit-profile-card {
   flex: 1 1 auto;
-  background: #fff;
+  background: #0b1020;
   padding: 28px 30px;
   box-shadow: 0 14px 40px rgba(20,30,60,0.06);
   border-radius: 14px;
-  color: #262626;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   align-self: stretch;
