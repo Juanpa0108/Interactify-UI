@@ -43,11 +43,10 @@
       opacity 0.15s ease,
       border-color 0.15s ease,
       transform 0.15s ease;
-    color: $color-text;              // ← aquí damos color claro
+    color: $color-text;
     background: none;
     border: none;
     cursor: pointer;
-    /* para que funcione bien tanto en <a> como en <button> */
     display: inline-flex;
     align-items: center;
 
@@ -77,14 +76,14 @@
     }
   }
 
+  /* Logout en rojo */
   &__link--logout {
-    /* estilo opcional para resaltar el logout */
-    color: $color-text;
+    color: #fca5a5;                 // rojo suave
     border-bottom-color: transparent;
 
     &:hover,
     &:focus-visible {
-      color: #ffffff;
+      color: #fecaca;               // un poco más claro al hover
     }
   }
 }

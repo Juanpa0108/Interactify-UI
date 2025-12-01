@@ -53,6 +53,17 @@
     font-size: 0.85rem;
     margin-top: 0.75rem;
   }
+
+  &__code {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.9;
+
+    span {
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+  }
 }
 
 /* fila del link + botones */
@@ -73,11 +84,24 @@
   }
 }
 
+/* layout base de acciones */
 .create-meeting__actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  justify-content: flex-end;
+}
+
+/* botones para el código: alineados a la izquierda */
+.create-meeting__actions--code {
+  margin-top: 0.5rem;
+  justify-content: flex-start;
+}
+
+/* botones para el link:
+   - Copiar link a la izquierda
+   - Ir a la reunión a la derecha */
+.create-meeting__actions--link {
+  justify-content: space-between;
 }
 
 /* estilos básicos de botones por si no los tienes aún */
@@ -93,6 +117,15 @@
   border-color: rgba(148, 163, 184, 0.6);
   background: transparent;
   color: $color-text;
+}
+
+/* Asegurar mismo tamaño para los botones de copiar
+   (Copiar código y Copiar link) dentro de CreateMeeting */
+.create-meeting__actions .btn--ghost {
+  min-width: 100px;      // puedes ajustar 130 → 140, 150 según lo veas
+  text-align: center;
+  justify-content: center;
+  display: inline-flex;
 }
 
 .btn--primary {
