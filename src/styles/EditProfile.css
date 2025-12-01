@@ -62,6 +62,30 @@
   box-shadow: 0 6px 18px rgba(26,35,126,0.12);
 }
 
+/* Delete button: match rounded corners and add hover animation */
+.edit-profile-delete {
+  display: inline-block;
+  width: 100%;
+  padding: 12px 14px;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms ease, filter 160ms ease;
+}
+
+.edit-profile-delete:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.22);
+  filter: brightness(0.95);
+}
+
+.edit-profile-delete:active {
+  transform: translateY(0);
+}
+
 @media (max-width: 900px) {
   .edit-profile-wrapper {
     flex-direction: column;
