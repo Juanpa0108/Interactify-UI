@@ -62,11 +62,38 @@
     border-radius: 1rem;
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid rgba(148, 163, 184, 0.3);
+
     h3 {
       text-align: center;
     }
     p {
       text-align: justify;
+    }
+  }
+
+  /* Formulario para unirse por código */
+  &__join-form {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  &__join-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+
+    input {
+      padding: 0.45rem 0.85rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(148, 163, 184, 0.6);
+      background: rgba(15, 23, 42, 0.95);
+      color: $color-text;
+      min-width: 220px;
+      font-size: 0.9rem;
     }
   }
 }
@@ -78,18 +105,45 @@
   font-size: 0.95rem;
   border: 1px solid transparent;
   cursor: pointer;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
 
   &--primary {
     background: $color-primary;
     color: white;
+    border-color: rgba(15, 23, 42, 0.85);
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.6);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.7);
+    }
   }
 
   &--ghost {
     background: transparent;
     border-color: rgba(148, 163, 184, 0.6);
     color: $color-text;
+
+    &:hover {
+      background: rgba(15, 23, 42, 0.85);
+    }
+  }
+
+  &--secondary {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(148, 163, 184, 0.7);
+    color: $color-text;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.6);
+    }
   }
 }
+
 @media (max-width: 900px) {
   .home__hero {
     grid-template-columns: 1fr;
@@ -104,6 +158,10 @@
     justify-content: center;
   }
 
+  .home__join-form {
+    justify-content: center;
+  }
+
   .home__hero-illustration {
     order: -1;
   }
@@ -113,77 +171,76 @@
   }
 
   /* Site map section on home */
-.home {
-  &__sitemap {
-    padding: 2.5rem 0 3.5rem;
-    border-top: 1px solid rgba(148, 163, 184, 0.25);
-    margin-top: 1.5rem;
-  }
-
-  &__sitemap-description {
-    max-width: 36rem;
-    opacity: 0.85;
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  &__sitemap-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2rem;
-  }
-
-  &__sitemap-column h3 {
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
-  }
-
-  &__sitemap-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    gap: 0.4rem;
-  }
-
-  &__sitemap-link {
-    font-size: 0.9rem;
-    opacity: 0.85;
-    text-decoration: none;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-
-    &:hover,
-    &:focus-visible {
-      opacity: 1;
-      transform: translateX(2px);
-    }
-
-    &--static {
-      cursor: default;
-      text-decoration: none;
-    }
-  }
-
-  &__flow-list {
-    padding-left: 1.25rem;
-    margin: 0;
-    display: grid;
-    gap: 0.5rem;
-
-    li {
-      font-size: 0.9rem;
-      opacity: 0.9;
-    }
-  }
-}
-
-/* Ajuste responsive del site map en dispositivos pequeños */
-@media (max-width: 900px) {
   .home {
+    &__sitemap {
+      padding: 2.5rem 0 3.5rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.25);
+      margin-top: 1.5rem;
+    }
+
+    &__sitemap-description {
+      max-width: 36rem;
+      opacity: 0.85;
+      margin-top: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
     &__sitemap-grid {
-      grid-template-columns: 1fr;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2rem;
+    }
+
+    &__sitemap-column h3 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    &__sitemap-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    &__sitemap-link {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      text-decoration: none;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+
+      &:hover,
+      &:focus-visible {
+        opacity: 1;
+        transform: translateX(2px);
+      }
+
+      &--static {
+        cursor: default;
+        text-decoration: none;
+      }
+    }
+
+    &__flow-list {
+      padding-left: 1.25rem;
+      margin: 0;
+      display: grid;
+      gap: 0.5rem;
+
+      li {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+    }
+  }
+
+  /* Ajuste responsive del site map en dispositivos pequeños */
+  @media (max-width: 900px) {
+    .home {
+      &__sitemap-grid {
+        grid-template-columns: 1fr;
+      }
     }
   }
 }
-}
-
