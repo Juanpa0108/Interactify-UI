@@ -10,6 +10,7 @@ import { auth } from '../config/firebase';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ENDPOINT_GET = `${API_URL}/api/user/profile`;
 const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
+const ENDPOINT_DELETE = `${API_URL}/api/auth/delete`;
 
 type UserData = {
 	firstName: string;
@@ -26,6 +27,7 @@ const EditProfile: React.FC = () => {
 	const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 	const [changed, setChanged] = useState(false);
 	const [saving, setSaving] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 	const [showToast, setShowToast] = useState(false);
 
 	useEffect(() => {
@@ -130,6 +132,33 @@ const EditProfile: React.FC = () => {
 		}
 	};
 
+	const handleDeleteAccount = async () => {
+		if (!firebaseUser) return;
+		const ok = window.confirm('¿Estás seguro? Esta acción eliminará tu cuenta permanentemente.');
+		if (!ok) return;
+		setDeleting(true);
+		setError('');
+		try {
+			const idToken = await firebaseUser.getIdToken();
+			const res = await fetch(ENDPOINT_DELETE, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${idToken}`,
+					'Content-Type': 'application/json',
+				},
+			});
+			if (!res.ok) throw new Error('No se pudo eliminar la cuenta');
+			// Sign out locally and clear storage
+			await auth.signOut();
+			localStorage.clear();
+			navigate('/');
+		} catch (err: any) {
+			setError(err.message || 'Error al eliminar la cuenta');
+		} finally {
+			setDeleting(false);
+		}
+	};
+
 	if (!firebaseUser) {
 		return null;
 	}
@@ -191,6 +220,15 @@ const EditProfile: React.FC = () => {
 							</div>
 							<button className="edit-profile-btn" type="submit" disabled={!changed || saving}>
 								{saving ? 'Guardando…' : 'Guardar cambios'}
+							</button>
+							<button
+								className="edit-profile-delete"
+								type="button"
+								onClick={handleDeleteAccount}
+								disabled={deleting}
+								style={{ background: '#ff4d4f', color: '#fff', marginTop: 12 }}
+							>
+								{deleting ? 'Eliminando…' : 'Eliminar cuenta'}
 							</button>
 						</form>
 					)}
