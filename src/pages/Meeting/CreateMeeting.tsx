@@ -16,9 +16,9 @@ const CreateMeeting: React.FC = () => {
 
   useEffect(() => {
     // Comprobamos si el usuario está autenticado (token de la API)
-    const token =
+    const storedToken =
       localStorage.getItem("token") || localStorage.getItem("authToken");
-    if (!token) {
+    if (!storedToken) {
       navigate("/login");
       return;
     }
@@ -28,6 +28,14 @@ const CreateMeeting: React.FC = () => {
     (async () => {
       try {
         const apiUrl = (import.meta.env.VITE_API_URL as string) || "";
+        // Preferimos token fresco de Firebase Auth por si el de localStorage expiró
+        let token = storedToken;
+        try {
+          const { auth } = await import("../../config/firebase");
+          if (auth.currentUser) {
+            token = await auth.currentUser.getIdToken();
+          }
+        } catch {}
         const res = await fetch(`${apiUrl}/api/meetings`, {
           method: "POST",
           headers: {
