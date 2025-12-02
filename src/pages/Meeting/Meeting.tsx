@@ -13,7 +13,9 @@ const Meeting: React.FC = () => {
   const meetingUrl = window.location.href;
 
   const handleLeaveMeeting = () => {
-    // Aquí puedes limpiar estado adicional si lo necesitan (cerrar sockets, etc.)
+  /**
+   * Here you can clean up additional state if needed (close sockets, etc.)
+  */
     navigate("/", { replace: true });
   };
 
@@ -46,7 +48,7 @@ const Meeting: React.FC = () => {
         className="meeting__layout"
         aria-label="Interfaz de sala de videoconferencia"
       >
-        {/* Área de video (mock / sin funcionalidad) */}
+        {/* video area (mock / no functionality) */}
         <div className="meeting__video-area" aria-label="Área de video">
           <div className="meeting__video-grid">
             <div className="meeting__video-tile meeting__video-tile--main">
@@ -70,7 +72,7 @@ const Meeting: React.FC = () => {
           </p>
         </div>
 
-        {/* Panel de chat: component real */}
+        {/* Chat panel: real component */}
         <aside
           className="meeting__chat-area"
           aria-label="Panel de chat de la reunión"
