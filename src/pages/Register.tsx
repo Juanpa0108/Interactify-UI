@@ -5,9 +5,18 @@ import { auth, githubProvider, googleProvider } from '../config/firebase';
 
 
 const MIN_AGE = 13;
-const MIN_PWD_LENGTH = 6; // Cambiado a 6 según los requisitos
+/**
+ * Minimum password length required by the application.
+ */
+const MIN_PWD_LENGTH = 6; // Changed to 6 according to requirements
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+/**
+ * Register component for Interactify.
+ * Allows users to create an account using email/password, Google, or GitHub.
+ * Handles registration, error display, and redirects after signup.
+ * @returns {JSX.Element} Registration form and social signup options.
+ */
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const imgSrc = '/registerImage.avif';
@@ -37,6 +46,10 @@ const Register: React.FC = () => {
   const passed = Object.values(requirements).filter(Boolean).length;
   const progress = Math.round((passed / totalReq) * 100);
 
+  /**
+   * Handles registration with email and password.
+   * @param {React.FormEvent} e - Form submit event.
+   */
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitted(true);
@@ -50,12 +63,18 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // Crear usuario en Firebase Auth
+      /**
+       * Create user in Firebase Auth.
+       */
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // Registrar en el backend: enviamos el idToken para que el servidor verifique
-      // y cree el perfil en Firestore (evita intentar crear el usuario dos veces).
+      /**
+       * Register in backend: send idToken for server verification.
+       */
+      /**
+       * Create profile in Firestore (prevents duplicate user creation).
+       */
       const response = await fetch(`${API_URL}/api/auth/signup`, {
         method: 'POST',
         headers: {
@@ -74,13 +93,24 @@ const Register: React.FC = () => {
         throw new Error(errorData.error || 'Error al registrar usuario');
       }
 
-      // Guardar token en localStorage
+      /**
+       * Save token in localStorage.
+       */
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(userCredential.user));
 
+<<<<<<< Updated upstream
       // Redirigir al home o dashboard
       navigate('/');
+=======
+      /**
+       * Redirect back to the intended route (meeting link) if present.
+       */
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
+>>>>>>> Stashed changes
     } catch (err: any) {
       console.error('Error en registro:', err);
       let errorMessage = 'Error al crear la cuenta';
@@ -101,16 +131,23 @@ const Register: React.FC = () => {
     }
   }
 
+  /**
+   * Handles registration/login with Google using Firebase Auth.
+   */
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
 
     try {
-      // Autenticar con Google usando Firebase
+      /**
+       * Authenticate with Google using Firebase Auth.
+       */
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
-      // Verificar con el backend
+      /**
+       * Verify authentication with backend server.
+       */
       const response = await fetch(`${API_URL}/api/auth/login/google`, {
         method: 'POST',
         headers: {
@@ -126,12 +163,16 @@ const Register: React.FC = () => {
 
       const data = await response.json();
 
-      // Guardar token en localStorage
+      /**
+       * Save token in localStorage.
+       */
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Redirigir al home
+      /**
+       * Redirect to home after successful login.
+       */
       navigate('/');
     } catch (err: any) {
       console.error('Error en registro/login con Google:', err);
@@ -151,16 +192,23 @@ const Register: React.FC = () => {
     }
   };
 
+  /**
+   * Handles registration/login with GitHub using Firebase Auth.
+   */
   const handleGitHubLogin = async () => {
     setError('');
     setLoading(true);
 
     try {
-      // Autenticar con GitHub
+      /**
+       * Authenticate with GitHub using Firebase Auth.
+       */
       const result = await signInWithPopup(auth, githubProvider);
       const idToken = await result.user.getIdToken();
 
-      // Verificar con el backend
+      /**
+       * Verify authentication with backend server.
+       */
       const response = await fetch(`${API_URL}/api/auth/login/github`, {
         method: 'POST',
         headers: {
@@ -176,7 +224,9 @@ const Register: React.FC = () => {
 
       const data = await response.json();
 
-      // Guardar token en localStorage
+      /**
+       * Save token in localStorage.
+       */
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user));

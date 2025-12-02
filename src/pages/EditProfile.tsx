@@ -7,6 +7,9 @@ import type { User } from 'firebase/auth';
 import '../styles/EditProfile.css';
 import { auth } from '../config/firebase';
 
+/**
+ * API base URL for backend requests.
+ */
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ENDPOINT_GET = `${API_URL}/api/user/profile`;
 const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
@@ -17,6 +20,12 @@ type UserData = {
 	email: string;
 };
 
+/**
+ * EditProfile component for Interactify.
+ * Allows authenticated users to view and update their profile information.
+ * Handles profile fetch, update, and account deletion.
+ * @returns {JSX.Element} Profile edit form and controls.
+ */
 const EditProfile: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<UserData | null>(null);
@@ -87,11 +96,19 @@ const EditProfile: React.FC = () => {
 		);
 	}, [form, user]);
 
+	/**
+	 * Handles input changes for the profile form.
+	 * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event.
+	 */
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setForm((prev) => ({ ...prev, [name]: value }));
 	};
 
+	/**
+	 * Handles saving updated profile information.
+	 * @param {React.FormEvent} e - Form submit event.
+	 */
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setSaving(true);
@@ -130,6 +147,41 @@ const EditProfile: React.FC = () => {
 		}
 	};
 
+<<<<<<< Updated upstream
+=======
+	/**
+	 * Handles account deletion for the authenticated user.
+	 */
+	const handleDeleteAccount = async () => {
+		if (!firebaseUser) return;
+		const ok = window.confirm('¿Estás seguro? Esta acción eliminará tu cuenta permanentemente.');
+		if (!ok) return;
+		setDeleting(true);
+		setError('');
+		try {
+			const idToken = await firebaseUser.getIdToken();
+			const res = await fetch(ENDPOINT_DELETE, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': `Bearer ${idToken}`,
+					'Content-Type': 'application/json',
+				},
+			});
+			if (!res.ok) throw new Error('No se pudo eliminar la cuenta');
+			/**
+			 * Sign out locally and clear local storage.
+			 */
+			await auth.signOut();
+			localStorage.clear();
+			navigate('/');
+		} catch (err: any) {
+			setError(err.message || 'Error al eliminar la cuenta');
+		} finally {
+			setDeleting(false);
+		}
+	};
+
+>>>>>>> Stashed changes
 	if (!firebaseUser) {
 		return null;
 	}

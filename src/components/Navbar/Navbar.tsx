@@ -62,6 +62,20 @@ const Navbar: React.FC = () => {
             Sobre nosotros
           </NavLink>
 
+<<<<<<< Updated upstream
+=======
+          {/* NUEVO: opción de unirse a una reunión por código solo si está autenticado */}
+          {isAuthenticated && (
+            <button
+              type="button"
+              className="navbar__link"
+              onClick={handleJoinMeeting}
+            >
+              Unirse a una reunión
+            </button>
+          )}
+
+>>>>>>> Stashed changes
           {isAuthenticated ? (
             <>
               <NavLink

@@ -8,6 +8,12 @@ import { auth, githubProvider, googleProvider } from '../config/firebase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+/**
+ * Login component for Interactify.
+ * Allows users to log in using email/password, Google, or GitHub.
+ * Handles authentication, error display, and redirects after login.
+ * @returns {JSX.Element} Login form and social login options.
+ */
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const imgSrc = '/loginImage.png';
@@ -19,6 +25,10 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  /**
+   * Handles login with email and password.
+   * @param {React.FormEvent} e - Form submit event.
+   */
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -52,15 +62,22 @@ const Login: React.FC = () => {
     }
   };
 
+  /**
+   * Handles login with Google using Firebase Auth.
+   */
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      // Autenticar con Google usando Firebase
+      /**
+       * Authenticate with Google using Firebase Auth.
+       */
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
-      // Verificar con el backend
+      /**
+       * Verify authentication with backend server.
+       */
       const response = await fetch(`${API_URL}/api/auth/login/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,11 +97,24 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error('Error en login con Google:', err);
       const msg = String(err?.message || err);
-      // If popup fails due to COOP/popup blocking, fall back to redirect flow
+      /**
+       * If popup fails due to COOP/popup blocking, fallback to redirect flow.
+       */
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
+<<<<<<< Updated upstream
+=======
+          /**
+           * Save the intended path before starting redirect flow.
+           */
+          /**
+           * Restore the intended path after OAuth redirect completes.
+           */
+          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
+          sessionStorage.setItem('postAuthRedirect', intended);
+>>>>>>> Stashed changes
           await signInWithRedirect(auth, googleProvider);
-          return; // redirect started; user will be returned to app
+          return; /** redirect started; user will be returned to app */
         } catch (redirectErr) {
           console.error('Redirect fallback failed:', redirectErr);
         }
@@ -96,6 +126,9 @@ const Login: React.FC = () => {
     }
   };
 
+  /**
+   * Handles login with GitHub using Firebase Auth.
+   */
   const handleGitHubLogin = async () => {
     setError('');
     setLoading(true);
@@ -158,8 +191,12 @@ const Login: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                   <small className="small">O continúa con</small>
                   <div className="social-row">
-                    <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/googleLogo.png'} alt="google" style={{ height:18 }} /></button>
-                    <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}><img src={'/githubLogo.png'} alt="github" style={{ height:18 }} /></button>
+                    <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px 20px' }}>
+                      <img src={'/googleLogo.png'} alt="google" style={{ height:32, width:32 }} />
+                    </button>
+                    <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px 20px' }}>
+                      <img src={'/githubLogo.png'} alt="github" style={{ height:32, width:32 }} />
+                    </button>
                   </div>
                 </div>
                 <div style={{ textAlign: 'center', marginTop: 12 }}>

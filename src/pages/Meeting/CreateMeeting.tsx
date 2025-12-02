@@ -15,8 +15,16 @@ const CreateMeeting: React.FC = () => {
   const [showCopied, setShowCopied] = useState(false);
 
   useEffect(() => {
+<<<<<<< Updated upstream
     // Comprobamos si el usuario está autenticado (token de la API)
     const token = localStorage.getItem("token") || localStorage.getItem("authToken");
+=======
+    /**
+     * Verify if the user is authenticated (API token)
+     */
+    const token =
+      localStorage.getItem("token") || localStorage.getItem("authToken");
+>>>>>>> Stashed changes
     if (!token) {
       navigate("/login");
       return;

@@ -1,5 +1,10 @@
 import "./Home.scss";
 import { useNavigate } from "react-router-dom";
+<<<<<<< Updated upstream
+=======
+import { useState, useEffect } from "react";
+import { auth } from "../../config/firebase";
+>>>>>>> Stashed changes
 
 /**
  * Home page component.
@@ -8,9 +13,36 @@ import { useNavigate } from "react-router-dom";
 const Home: React.FC = () => {
   const navigate = useNavigate();
 
+<<<<<<< Updated upstream
   const handleScrollToFeatures = () => {
     const section = document.getElementById("features");
     section?.scrollIntoView({ behavior: "smooth" });
+=======
+  const [showJoinForm, setShowJoinForm] = useState(false);
+  const [joinCode, setJoinCode] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const current = auth.currentUser;
+    if (current) {
+      setIsAuthenticated(true);
+      return;
+    }
+    const unsub = auth.onAuthStateChanged((user) => {
+      setIsAuthenticated(!!user);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleJoinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = joinCode.trim();
+    if (!trimmed) return;
+    /**
+     * Using code as meetingId.
+     */
+    navigate(`/meeting/${trimmed}`);
+>>>>>>> Stashed changes
   };
 
   return (
@@ -24,6 +56,7 @@ const Home: React.FC = () => {
             el audio y el video en tiempo real.
           </p>
           <div className="home__hero-actions">
+<<<<<<< Updated upstream
             <button
               className="btn btn--primary"
               onClick={() => navigate("/create")}
@@ -37,11 +70,54 @@ const Home: React.FC = () => {
               Ver funcionalidades
             </button>
           </div>
+=======
+            {isAuthenticated && (
+              <>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => navigate("/create")}
+                >
+                  Crear reunión
+                </button>
+                <button
+                  className="btn btn--ghost"
+                  type="button"
+                  onClick={() => setShowJoinForm((prev) => !prev)}
+                >
+                  Unirse a una reunión
+                </button>
+              </>
+            )}
+          </div>
+
+          {isAuthenticated && showJoinForm && (
+            <form
+              className="home__join-form"
+              onSubmit={handleJoinSubmit}
+              aria-label="Unirse a una reunión mediante código"
+            >
+              <label className="home__join-label">
+                Código de reunión
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                  placeholder="Ej: 2f9c8a1b..."
+                  aria-label="Código de reunión"
+                />
+              </label>
+              <button className="btn btn--secondary" type="submit">
+                Unirse
+              </button>
+            </form>
+          )}
+>>>>>>> Stashed changes
         </div>
 
         <div className="home__hero-illustration">
-          {/* Reemplazar por la ilustración real del Figma */}
-          <div className="home__mockup">Vista previa de Interactify</div>
+          <div className="home__mockup">
+            <img src="/video-conferencia.png" alt="Video conferencia" style={{width: '100%', height: '100%', objectFit: 'cover', borderRadius: '1.5rem'}} />
+          </div>
         </div>
       </section>
 
@@ -61,6 +137,15 @@ const Home: React.FC = () => {
               Un menú simple y un mapa del sitio ayudan a entender en qué parte
               de la plataforma estás.
             </p>
+            <ul style={{marginTop: '1rem'}}>
+              <li><a href="/">Inicio</a></li>
+              <li><a href="/about">Sobre nosotros</a></li>
+              {isAuthenticated && <li><a href="/edit-profile">Editar perfil</a></li>}
+              {isAuthenticated && <li><a href="/create">Crear reunión</a></li>}
+              {isAuthenticated && <li><a href="#" onClick={() => setShowJoinForm(true)}>Unirse a una reunión</a></li>}
+              {!isAuthenticated && <li><a href="/login">Iniciar sesión</a></li>}
+              {!isAuthenticated && <li><a href="/register">Registro</a></li>}
+            </ul>
           </article>
           <article className="home__feature-card">
             <h3>Lista para crecer</h3>
