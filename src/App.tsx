@@ -11,6 +11,8 @@ import EditProfile from "./pages/EditProfile";
 import Navbar from "./components/Navbar/Navbar";
 import RequireAuth from "./components/RequireAuth";
 import Footer from "./components/Footer/Footer";
+import Recovery from "./pages/Recovery/recovery";
+import ResetPassword from "./pages/resetPassword/resetPassword";
 
 const App: React.FC = () => {
   /**
@@ -71,6 +73,8 @@ const App: React.FC = () => {
               </RequireAuth>
             }
           />
+          <Route path="/recovery" element={<Recovery />} />
+          <Route path="/resetPassword" element={<ResetPassword />} />
         </Routes>
       </main>
 

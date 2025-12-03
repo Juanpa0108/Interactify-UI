@@ -166,7 +166,7 @@ const Login: React.FC = () => {
                     {showPassword ? '🙈' : '👁️'}
                   </button>
                 </div>
-                <div className="auth-row"><a className="auth-link" href="#">¿Olvidaste tu contraseña?</a></div>
+                <div className="auth-row"><a className="auth-link" href="/recovery">¿Olvidaste tu contraseña?</a></div>
                 <button className="auth-btn" type="submit" disabled={loading}>{'Iniciar sesión'}</button>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                   <small className="small">O continúa con</small>
