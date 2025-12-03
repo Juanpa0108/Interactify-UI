@@ -270,7 +270,7 @@ const Meeting: React.FC = () => {
                   await navigator.clipboard.writeText(String(id || ''));
                   setCopied('code');
                   setTimeout(() => setCopied('none'), 1600);
-                } catch {}
+                } catch (err) { console.error('Failed to copy code:', err); }
               }}
             >Copiar código</button>
             <button
@@ -281,7 +281,7 @@ const Meeting: React.FC = () => {
                   await navigator.clipboard.writeText(meetingUrl);
                   setCopied('link');
                   setTimeout(() => setCopied('none'), 1600);
-                } catch {}
+                } catch (err) { console.error('Failed to copy link:', err); }
               }}
             >Copiar enlace</button>
             {copied !== 'none' && (
