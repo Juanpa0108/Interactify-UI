@@ -33,6 +33,7 @@ const Meeting: React.FC = () => {
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array }>>({});
+  const animationFrameRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -166,12 +167,16 @@ const Meeting: React.FC = () => {
           next[pid] = pavg > 30;
         }
         setSpeakingPeers(next);
-        requestAnimationFrame(tick);
+        animationFrameRef.current = requestAnimationFrame(tick);
       };
-      tick();
+      animationFrameRef.current = requestAnimationFrame(tick);
 
       return () => {
         mounted = false;
+        if (animationFrameRef.current !== null) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
         const s = socketService.getSocket();
         if (s) {
           s.off('usersOnline');
