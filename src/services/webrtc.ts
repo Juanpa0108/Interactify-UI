@@ -61,7 +61,7 @@ class WebRTCManager {
     });
 
     // ensure an audio transceiver exists for predictable negotiation
-    pc.addTransceiver('audio');
+    pc.addTransceiver('audio', { direction: 'sendrecv' });
 
     // add local audio
     if (this.localStream) {
@@ -70,6 +70,7 @@ class WebRTCManager {
 
     pc.onicecandidate = (ev) => {
       if (ev.candidate) {
+        console.debug('[RTC] ICE candidate ->', remoteId);
         this.socket.emit('rtc:ice', { room: this.meetingId, to: remoteId, candidate: ev.candidate });
       }
     };
@@ -85,6 +86,7 @@ class WebRTCManager {
         this.makingOffer.set(remoteId, true);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
+        console.debug('[RTC] Sending offer ->', remoteId);
         this.socket.emit('rtc:offer', { room: this.meetingId, to: remoteId, offer });
       } catch {}
       finally { this.makingOffer.set(remoteId, false); }
@@ -105,6 +107,7 @@ class WebRTCManager {
       if (!this.localStream) await this.initLocalAudio();
       const pc = this.createPeer(from, true);
       // letting onnegotiationneeded drive offers avoids wrong-state errors
+      console.debug('[RTC] Peer joined ->', from, 'signaling:', pc.signalingState);
       this.events.onParticipantJoined?.(from);
     });
 
@@ -118,6 +121,7 @@ class WebRTCManager {
       if (this.ignoreOffer.get(from)) return;
 
       try {
+        console.debug('[RTC] Received offer <-', from, 'state:', pc.signalingState, 'collision:', offerCollision);
         if (offerCollision) {
           await Promise.all([
             pc.setLocalDescription({ type: 'rollback' } as RTCSessionDescriptionInit),
@@ -130,6 +134,7 @@ class WebRTCManager {
         this.isSettingRemoteAnswerPending.set(from, true);
         await pc.setLocalDescription(answer);
         this.isSettingRemoteAnswerPending.set(from, false);
+        console.debug('[RTC] Sending answer ->', from);
         this.socket.emit('rtc:answer', { room: this.meetingId, to: from, answer });
         this.events.onParticipantJoined?.(from);
       } catch {}
@@ -138,13 +143,17 @@ class WebRTCManager {
     this.socket.on('rtc:answer', async ({ from, answer }: { from: PeerId, answer: RTCSessionDescriptionInit }) => {
       const pc = this.peers.get(from);
       if (!pc) return;
-      try { await pc.setRemoteDescription(new RTCSessionDescription(answer)); } catch {}
+      try {
+        console.debug('[RTC] Received answer <-', from);
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      } catch {}
     });
 
     this.socket.on('rtc:ice', async ({ from, candidate }: { from: PeerId, candidate: RTCIceCandidateInit }) => {
       const pc = this.peers.get(from);
       if (!pc) return;
       try {
+        console.debug('[RTC] Received ICE <-', from);
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch {}
     });

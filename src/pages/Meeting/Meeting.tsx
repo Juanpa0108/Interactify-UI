@@ -23,6 +23,7 @@ const Meeting: React.FC = () => {
   const [showAll, setShowAll] = useState(false);
   const [micOn, setMicOn] = useState(true);
   const [speaking, setSpeaking] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'desconectado'|'conectando'|'conectado'>('desconectado');
   const [remoteAudios, setRemoteAudios] = useState<Record<string, MediaStream>>({});
   const [speakingPeers, setSpeakingPeers] = useState<Record<string, boolean>>({});
   const [showChat, setShowChat] = useState(true);
@@ -140,6 +141,7 @@ const Meeting: React.FC = () => {
       });
       rtcRef.current = rtc;
       await rtc.initLocalAudio();
+      setConnectionStatus('conectando');
       await rtc.join();
 
       // speaking indicator for local mic
@@ -177,6 +179,7 @@ const Meeting: React.FC = () => {
         if (rtcRef.current) rtcRef.current.leave();
         analyserRef.current?.disconnect();
         audioCtxRef.current?.close();
+        setConnectionStatus('desconectado');
       };
     }
 
@@ -382,6 +385,7 @@ const Meeting: React.FC = () => {
                 aria-label="Salir de la reunión"
               >Salir</button>
             )}
+            <span className="toolbar-status" aria-live="polite">Estado: {connectionStatus}</span>
           </div>
           <span className={`speaking-indicator ${speaking ? 'speaking' : ''}`}>Hablas</span>
           </div>

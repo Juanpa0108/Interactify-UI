@@ -47,29 +47,19 @@ const CreateMeeting: React.FC = () => {
 
         if (!res.ok) {
           const txt = await res.text();
-          console.warn(
-            "Error creating meeting on server, falling back to client-only:",
-            txt
-          );
+          console.warn("Error creando reunión en el servidor:", txt);
           setErrorMessage(
-            `El servidor respondió con estado ${res.status}. Se usará un ID local.`
+            `No se pudo crear la reunión (HTTP ${res.status}). Intenta de nuevo.`
           );
-          const fallbackId =
-            typeof crypto !== "undefined" && (crypto as any).randomUUID
-              ? (crypto as any).randomUUID()
-              : Math.random().toString(36).substring(2, 10);
-          setCreatedMeetingId(fallbackId);
+          setCreatedMeetingId(null);
         } else {
           const data = await res.json();
           const idFromServer = data?.meetingId ?? data?.meeting?.id ?? null;
           if (idFromServer) {
             setCreatedMeetingId(idFromServer);
           } else {
-            const fallbackId =
-              typeof crypto !== "undefined" && (crypto as any).randomUUID
-                ? (crypto as any).randomUUID()
-                : Math.random().toString(36).substring(2, 10);
-            setCreatedMeetingId(fallbackId);
+            setErrorMessage("El servidor no devolvió un ID de reunión.");
+            setCreatedMeetingId(null);
           }
         }
       } catch (err) {
@@ -166,7 +156,8 @@ const CreateMeeting: React.FC = () => {
                 <button
                   className="btn btn--primary"
                   type="button"
-                  onClick={() =>
+                  disabled={!createdMeetingId}
+                  onClick={() => createdMeetingId &&
                     navigate(`/meeting/${createdMeetingId}`, { replace: true })
                   }
                 >
@@ -177,7 +168,18 @@ const CreateMeeting: React.FC = () => {
 
             {copyMessage && <div className="toast">{copyMessage}</div>}
             {errorMessage && (
-              <p className="error">Advertencia: {errorMessage}</p>
+              <div className="error">
+                {errorMessage}
+                <div style={{ marginTop: 8 }}>
+                  <button
+                    className="btn btn--ghost"
+                    type="button"
+                    onClick={() => window.location.reload()}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         )}
