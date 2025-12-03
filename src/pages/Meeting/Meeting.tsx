@@ -154,13 +154,14 @@ const Meeting: React.FC = () => {
       src.connect(analyser);
       const data = new Uint8Array(analyser.frequencyBinCount);
       const tick = () => {
-        analyser.getByteFrequencyData(data);
+        // TS lib mismatch: cast to plain Uint8Array for WebAudio typings
+        analyser.getByteFrequencyData(data as unknown as Uint8Array);
         const avg = data.reduce((a,b)=>a+b,0)/data.length;
         setSpeaking(avg > 30);
         // update peers speaking
         const next: Record<string, boolean> = {};
         for (const [pid, obj] of Object.entries(peerAnalysersRef.current)) {
-          obj.analyser.getByteFrequencyData(obj.data);
+          obj.analyser.getByteFrequencyData(obj.data as unknown as Uint8Array);
           const pavg = obj.data.reduce((a,b)=>a+b,0)/obj.data.length;
           next[pid] = pavg > 30;
         }

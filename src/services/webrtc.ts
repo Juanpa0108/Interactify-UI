@@ -51,7 +51,7 @@ class WebRTCManager {
     this.localStream.getAudioTracks().forEach(t => (t.enabled = enabled));
   }
 
-  private createPeer(remoteId: PeerId, initiator: boolean) {
+  private createPeer(remoteId: PeerId) {
     if (this.peers.has(remoteId)) return this.peers.get(remoteId)!;
 
     const pc = new RTCPeerConnection({
@@ -105,7 +105,7 @@ class WebRTCManager {
   private handleSocket() {
     this.socket.on('rtc:joined', async ({ from }: { from: PeerId }) => {
       if (!this.localStream) await this.initLocalAudio();
-      const pc = this.createPeer(from, true);
+      const pc = this.createPeer(from);
       // letting onnegotiationneeded drive offers avoids wrong-state errors
       console.debug('[RTC] Peer joined ->', from, 'signaling:', pc.signalingState);
       this.events.onParticipantJoined?.(from);
@@ -113,7 +113,7 @@ class WebRTCManager {
 
     this.socket.on('rtc:offer', async ({ from, offer }: { from: PeerId, offer: RTCSessionDescriptionInit }) => {
       if (!this.localStream) await this.initLocalAudio();
-      const pc = this.createPeer(from, false);
+      const pc = this.createPeer(from);
       const polite = true;
       const readyForOffer = pc.signalingState === 'stable' || (pc.signalingState === 'have-local-offer' && this.isSettingRemoteAnswerPending.get(from));
       const offerCollision = this.makingOffer.get(from) || !readyForOffer;
