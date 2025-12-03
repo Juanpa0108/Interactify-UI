@@ -88,8 +88,9 @@ class WebRTCManager {
         await pc.setLocalDescription(offer);
         console.debug('[RTC] Sending offer ->', remoteId);
         this.socket.emit('rtc:offer', { room: this.meetingId, to: remoteId, offer });
-      } catch {}
-      finally { this.makingOffer.set(remoteId, false); }
+      } catch (err) {
+        console.error('[RTC] Error creating offer for', remoteId, ':', err);
+      } finally { this.makingOffer.set(remoteId, false); }
     };
 
     pc.onconnectionstatechange = () => {
@@ -137,7 +138,9 @@ class WebRTCManager {
         console.debug('[RTC] Sending answer ->', from);
         this.socket.emit('rtc:answer', { room: this.meetingId, to: from, answer });
         this.events.onParticipantJoined?.(from);
-      } catch {}
+      } catch (err) {
+        console.error('[RTC] Error handling offer from', from, ':', err);
+      }
     });
 
     this.socket.on('rtc:answer', async ({ from, answer }: { from: PeerId, answer: RTCSessionDescriptionInit }) => {
@@ -146,7 +149,9 @@ class WebRTCManager {
       try {
         console.debug('[RTC] Received answer <-', from);
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      } catch {}
+      } catch (err) {
+        console.error('[RTC] Error handling answer from', from, ':', err);
+      }
     });
 
     this.socket.on('rtc:ice', async ({ from, candidate }: { from: PeerId, candidate: RTCIceCandidateInit }) => {
@@ -155,7 +160,9 @@ class WebRTCManager {
       try {
         console.debug('[RTC] Received ICE <-', from);
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch {}
+      } catch (err) {
+        console.error('[RTC] Error adding ICE candidate from', from, ':', err);
+      }
     });
 
     this.socket.on('rtc:left', ({ from }: { from: PeerId }) => {
