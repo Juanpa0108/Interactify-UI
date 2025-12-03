@@ -97,7 +97,7 @@ const Meeting: React.FC = () => {
       const socket = socketService.connectSocket();
       // If someone ends the meeting, leave and redirect
       socket.on('meeting:ended', () => {
-        try { rtcRef.current?.leave(); } catch {}
+        try { rtcRef.current?.leave(); } catch (err) { console.error("Error leaving RTC connection:", err); }
         navigate("/", { replace: true });
       });
 
