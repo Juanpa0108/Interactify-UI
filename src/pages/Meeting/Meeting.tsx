@@ -146,30 +146,45 @@ const Meeting: React.FC = () => {
       await rtc.join();
 
       // speaking indicator for local mic
-      if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const ctx = audioCtxRef.current!;
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 512;
-      analyserRef.current = analyser;
-      const src = ctx.createMediaStreamSource((await rtc.initLocalAudio())!);
-      src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      const tick = () => {
-        // TS lib mismatch: cast to plain Uint8Array for WebAudio typings
-        analyser.getByteFrequencyData(data as unknown as Uint8Array);
-        const avg = data.reduce((a,b)=>a+b,0)/data.length;
-        setSpeaking(avg > 30);
-        // update peers speaking
-        const next: Record<string, boolean> = {};
-        for (const [pid, obj] of Object.entries(peerAnalysersRef.current)) {
-          obj.analyser.getByteFrequencyData(obj.data as unknown as Uint8Array);
-          const pavg = obj.data.reduce((a,b)=>a+b,0)/obj.data.length;
-          next[pid] = pavg > 30;
-        }
-        setSpeakingPeers(next);
-        animationFrameRef.current = requestAnimationFrame(tick);
-      };
-      animationFrameRef.current = requestAnimationFrame(tick);
+  if (!audioCtxRef.current)
+  audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+const ctx = audioCtxRef.current!;
+const analyser = ctx.createAnalyser();
+analyser.fftSize = 512;
+analyserRef.current = analyser;
+
+const src = ctx.createMediaStreamSource((await rtc.initLocalAudio())!);
+src.connect(analyser);
+
+// 🔥 FIX: crear ArrayBuffer explícito para evitar crash en deploy
+const data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
+
+const tick = () => {
+  analyser.getByteFrequencyData(data);
+  const avg = data.reduce((a, b) => a + b, 0) / data.length;
+  setSpeaking(avg > 30);
+
+  // update peers speaking
+  const next: Record<string, boolean> = {};
+
+  for (const [pid, obj] of Object.entries(peerAnalysersRef.current)) {
+
+    // 🔥 FIX también para los peers en caso que su Uint8Array no coincida
+    if (!obj.data || obj.data.length !== obj.analyser.frequencyBinCount) {
+      obj.data = new Uint8Array(new ArrayBuffer(obj.analyser.frequencyBinCount));
+    }
+
+    obj.analyser.getByteFrequencyData(obj.data as Uint8Array<ArrayBuffer>);
+    const pavg = obj.data.reduce((a, b) => a + b, 0) / obj.data.length;
+    next[pid] = pavg > 30;
+  }
+
+  setSpeakingPeers(next);
+  animationFrameRef.current = requestAnimationFrame(tick);
+};
+
+animationFrameRef.current = requestAnimationFrame(tick);
 
       return () => {
         mounted = false;
