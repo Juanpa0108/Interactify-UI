@@ -10,7 +10,8 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="footer">
-      <div className="footer__top app-content">
+      <div className="footer__container">
+      <div className="footer__top">
         <div className="footer__brand-block">
           <span className="footer__brand">Interactify</span>
           <p className="footer__description">
@@ -53,11 +54,11 @@ const Footer: React.FC = () => {
           </ul>
         </nav>
       </div>
-
-      <div className="footer__bottom app-content">
+      <div className="footer__bottom">
         <p className="footer__copy">
           © {year} Interactify. All rights reserved.
         </p>
+      </div>
       </div>
     </footer>
   );

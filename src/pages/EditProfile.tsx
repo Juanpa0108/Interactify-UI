@@ -48,7 +48,7 @@ const EditProfile: React.FC = () => {
 	useEffect(() => {
 		if (!firebaseUser) return;
 		
-		const fetchProfile = async () => {
+				const fetchProfile = async () => {
 			setLoading(true);
 			setError('');
 			
@@ -64,7 +64,7 @@ const EditProfile: React.FC = () => {
 				});
 				
 				if (!res.ok) throw new Error('No se pudo cargar el perfil');
-				const data = await res.json();
+								const data = await res.json();
 				setUser(data);
 				setForm({
 					firstName: data.firstName || '',
@@ -174,6 +174,7 @@ const EditProfile: React.FC = () => {
 						<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
 						<h1>Editar perfil</h1>
 					</div>
+					{/* Quitar imagen pequeña adicional para no duplicar y evitar cortes en responsive */}
 					<p className="lead">Modifica tus datos personales</p>
 					{loading ? (
 						<p>Cargando…</p>
