@@ -6,12 +6,10 @@ import { auth } from "../../config/firebase";
 const Home: React.FC = () => {
   const navigate = useNavigate();
 
-  // ------------ HOOKS (tienen que ir aquí) ------------
   const [showJoinForm, setShowJoinForm] = useState(false);
   const [joinCode, setJoinCode] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // ------------ AUTH ------------
   useEffect(() => {
     const current = auth.currentUser;
     if (current) {
@@ -24,7 +22,6 @@ const Home: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // ------------ HANDLERS ------------
   const handleScrollToFeatures = () => {
     const section = document.getElementById("features");
     section?.scrollIntoView({ behavior: "smooth" });
@@ -34,7 +31,6 @@ const Home: React.FC = () => {
     e.preventDefault();
     const trimmed = joinCode.trim();
     if (!trimmed) return;
-
     navigate(`/meeting/${trimmed}`);
   };
 
@@ -50,76 +46,72 @@ const Home: React.FC = () => {
           </p>
 
           <div className="home__hero-actions">
-            <button
-              className="btn btn--primary"
-              onClick={() => navigate("/create")}
-            >
-              Crear reunión
-            </button>
+            {isAuthenticated ? (
+              <>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => navigate("/create")}
+                >
+                  Crear reunión
+                </button>
 
-            <button
-              className="btn btn--ghost"
-              onClick={handleScrollToFeatures}
-            >
-              Ver funcionalidades
-            </button>
+                <button
+                  className="btn btn--ghost"
+                  type="button"
+                  onClick={() => setShowJoinForm((prev) => !prev)}
+                >
+                  Unirse a una reunión
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => navigate("/login")}
+                >
+                  Comenzar ahora
+                </button>
+
+                <button
+                  className="btn btn--ghost"
+                  onClick={handleScrollToFeatures}
+                >
+                  Ver funcionalidades
+                </button>
+              </>
+            )}
           </div>
 
-          {isAuthenticated && (
-            <>
-              <button
-                className="btn btn--primary"
-                onClick={() => navigate("/create")}
-              >
-                Crear reunión
-              </button>
+          {/* FORMULARIO DE UNIRSE */}
+          {isAuthenticated && showJoinForm && (
+            <form
+              className="home__join-form"
+              onSubmit={handleJoinSubmit}
+              aria-label="Unirse a una reunión mediante código"
+            >
+              <label className="home__join-label">
+                Código de reunión
+                <input
+                  type="text"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                  placeholder="Ej: 2f9c8a1b..."
+                  aria-label="Código de reunión"
+                />
+              </label>
 
-              <button
-                className="btn btn--ghost"
-                type="button"
-                onClick={() => setShowJoinForm((prev) => !prev)}
-              >
-                Unirse a una reunión
+              <button className="btn btn--secondary" type="submit">
+                Unirse
               </button>
-            </>
+            </form>
           )}
         </div>
-
-        {/* FORMULARIO DE UNIRSE */}
-        {isAuthenticated && showJoinForm && (
-          <form
-            className="home__join-form"
-            onSubmit={handleJoinSubmit}
-            aria-label="Unirse a una reunión mediante código"
-          >
-            <label className="home__join-label">
-              Código de reunión
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="Ej: 2f9c8a1b..."
-                aria-label="Código de reunión"
-              />
-            </label>
-
-            <button className="btn btn--secondary" type="submit">
-              Unirse
-            </button>
-          </form>
-        )}
 
         <div className="home__hero-illustration">
           <div className="home__mockup">
             <img
               src="/video-conferencia.png"
               alt="Video conferencia"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                borderRadius: "1.5rem",
-              }}
             />
           </div>
         </div>
@@ -145,23 +137,21 @@ const Home: React.FC = () => {
               de la plataforma estás.
             </p>
 
-            <ul style={{ marginTop: "1rem" }}>
+            <ul className="home__feature-list">
               <li><a href="/">Inicio</a></li>
               <li><a href="/about">Sobre nosotros</a></li>
 
-              {isAuthenticated && (
+              {isAuthenticated ? (
                 <>
                   <li><a href="/edit-profile">Editar perfil</a></li>
                   <li><a href="/create">Crear reunión</a></li>
                   <li>
-                    <a href="#" onClick={() => setShowJoinForm(true)}>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setShowJoinForm(true); }}>
                       Unirse a una reunión
                     </a>
                   </li>
                 </>
-              )}
-
-              {!isAuthenticated && (
+              ) : (
                 <>
                   <li><a href="/login">Iniciar sesión</a></li>
                   <li><a href="/register">Registro</a></li>

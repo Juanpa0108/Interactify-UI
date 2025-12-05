@@ -53,7 +53,7 @@ const EditProfile: React.FC = () => {
 	useEffect(() => {
 		if (!firebaseUser) return;
 		
-				const fetchProfile = async () => {
+		const fetchProfile = async () => {
 			setLoading(true);
 			setError('');
 			
@@ -69,7 +69,7 @@ const EditProfile: React.FC = () => {
 				});
 				
 				if (!res.ok) throw new Error('No se pudo cargar el perfil');
-								const data = await res.json();
+				const data = await res.json();
 				setUser(data);
 				setForm({
 					firstName: data.firstName || '',
@@ -127,11 +127,11 @@ const EditProfile: React.FC = () => {
 				firstName: updated.user.firstName,
 				lastName: updated.user.lastName,
 			});
-		setSaving(false);
-		setChanged(false);
-		setToastMessage('¡Cambios guardados correctamente!');
-		setShowToast(true);
-		setTimeout(() => setShowToast(false), 2500);
+			setSaving(false);
+			setChanged(false);
+			setToastMessage('¡Cambios guardados correctamente!');
+			setShowToast(true);
+			setTimeout(() => setShowToast(false), 2500);
 		} catch (err: any) {
 			setError(err.message);
 			setSaving(false);
@@ -161,7 +161,6 @@ const EditProfile: React.FC = () => {
 		setError('');
 		
 		try {
-			// Reautenticar con Firebase para validar contraseña actual
 			const { EmailAuthProvider, reauthenticateWithCredential } = await import('firebase/auth');
 			const credential = EmailAuthProvider.credential(
 				firebaseUser.email!,
@@ -169,7 +168,6 @@ const EditProfile: React.FC = () => {
 			);
 			await reauthenticateWithCredential(firebaseUser, credential);
 			
-			// Obtener token fresco después de reautenticar
 			const idToken = await firebaseUser.getIdToken(true);
 			
 			const res = await fetch(ENDPOINT_CHANGE_PASSWORD, {
@@ -189,12 +187,12 @@ const EditProfile: React.FC = () => {
 				throw new Error(data.error || 'No se pudo cambiar la contraseña');
 			}
 			
-		setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-		setShowPasswordForm(false);
-		setToastMessage('¡Contraseña actualizada correctamente!');
-		setShowToast(true);
-		setError('');
-		setTimeout(() => setShowToast(false), 2500);
+			setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+			setShowPasswordForm(false);
+			setToastMessage('¡Contraseña actualizada correctamente!');
+			setShowToast(true);
+			setError('');
+			setTimeout(() => setShowToast(false), 2500);
 		} catch (err: any) {
 			if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
 				setError('La contraseña actual es incorrecta');
@@ -222,7 +220,6 @@ const EditProfile: React.FC = () => {
 				},
 			});
 			if (!res.ok) throw new Error('No se pudo eliminar la cuenta');
-			// Sign out locally and clear storage
 			await auth.signOut();
 			localStorage.clear();
 			navigate('/');
@@ -240,135 +237,176 @@ const EditProfile: React.FC = () => {
 	return (
 		<div className="edit-profile-page">
 			<div className="edit-profile-wrapper">
-				<div className="auth-image" aria-hidden="true">
-					<img src={'/registerImage.avif'} alt="Edit profile" />
+				<div className="edit-profile-image">
+					<img src="/registerImage.avif" alt="Edit profile" />
 				</div>
+
 				<div className="edit-profile-card">
-					<div className="auth-header">
-						<img src={'/logoInteractify.jpeg'} alt="logo" className="auth-logo" />
-						<h1>Editar perfil</h1>
+					<div className="edit-profile-header">
+						<img src="/logoInteractify.jpeg" alt="Interactify logo" className="edit-profile-logo" />
+						<h1>Editar Perfil</h1>
 					</div>
-					{/* Quitar imagen pequeña adicional para no duplicar y evitar cortes en responsive */}
-					<p className="lead">Modifica tus datos personales</p>
+
+					<p className="edit-profile-subtitle">
+						Actualiza tu información personal
+					</p>
+
 					{loading ? (
-						<p>Cargando…</p>
+						<div className="edit-profile-loader">
+							<div className="edit-spinner"></div>
+							<p>Cargando perfil...</p>
+						</div>
 					) : error ? (
-						<p style={{ color: 'red' }}>{error}</p>
+						<div className="edit-profile-error">
+							<span className="edit-error-icon">⚠️</span>
+							{error}
+						</div>
 					) : (
 						<>
+							{/* Formulario principal */}
 							<form className="edit-profile-form" onSubmit={handleSave}>
-								<div className="input-row">
-									<label>
-										<span className="sr-only">First name</span>
+								<div className="edit-profile-row">
+									<div className="edit-input-group">
+										<label htmlFor="firstName" className="edit-label">Nombre</label>
 										<input
+											id="firstName"
 											name="firstName"
 											type="text"
 											value={form.firstName}
 											onChange={handleChange}
-											placeholder="First name"
+											placeholder="Juan"
+											className="edit-input"
 											required
 										/>
-									</label>
-									<label>
-										<span className="sr-only">Last name</span>
+									</div>
+
+									<div className="edit-input-group">
+										<label htmlFor="lastName" className="edit-label">Apellido</label>
 										<input
+											id="lastName"
 											name="lastName"
 											type="text"
 											value={form.lastName}
 											onChange={handleChange}
-											placeholder="Last name"
+											placeholder="Pérez"
+											className="edit-input"
 											required
 										/>
-									</label>
+									</div>
 								</div>
-								<div className="input-row">
-									<label>
-										<span className="sr-only">Email address</span>
-										<input
-											name="email"
-											type="email"
-											value={form.email}
-											placeholder="Email address"
-											disabled
-											style={{ opacity: 0.6, cursor: 'not-allowed' }}
-										/>
-									</label>
+
+								<div className="edit-input-group">
+									<label htmlFor="email" className="edit-label">Correo electrónico</label>
+									<input
+										id="email"
+										name="email"
+										type="email"
+										value={form.email}
+										placeholder="tu@email.com"
+										className="edit-input edit-input--disabled"
+										disabled
+									/>
+									<span className="edit-helper-text">El correo no puede ser modificado</span>
 								</div>
-								<button className="edit-profile-btn" type="submit" disabled={!changed || saving}>
-									{saving ? 'Guardando…' : 'Guardar cambios'}
+
+								<button 
+									className="edit-btn edit-btn--primary" 
+									type="submit" 
+									disabled={!changed || saving}
+								>
+									{saving ? (
+										<>
+											<span className="edit-spinner-small"></span>
+											Guardando...
+										</>
+									) : (
+										'Guardar cambios'
+									)}
 								</button>
 							</form>
-							
-						{/* Password Change Section */}
-						<div className="password-section">
-							{!showPasswordForm ? (
-								<button
-									className="edit-profile-btn"
-									type="button"
-									onClick={() => setShowPasswordForm(true)}
-									style={{ background: '#5c6bc0' }}
-								>
-									Cambiar contraseña
-								</button>
-							) : (
-								<form className="password-form" onSubmit={handleChangePassword}>
-										<div className="input-row">
-											<label>
-												<span className="sr-only">Contraseña actual</span>
-												<input
-													name="currentPassword"
-													type="password"
-													value={passwordForm.currentPassword}
-													onChange={handlePasswordChange}
-													placeholder="Contraseña actual"
-													required
-												/>
-											</label>
+
+							{/* Sección de cambio de contraseña */}
+							<div className="edit-password-section">
+								<div className="edit-section-header">
+									<h3>Seguridad</h3>
+									<p>Gestiona la contraseña de tu cuenta</p>
+								</div>
+
+								{!showPasswordForm ? (
+									<button
+										className="edit-btn edit-btn--secondary"
+										type="button"
+										onClick={() => setShowPasswordForm(true)}
+									>
+										Cambiar contraseña
+									</button>
+								) : (
+									<form className="edit-password-form" onSubmit={handleChangePassword}>
+										<div className="edit-input-group">
+											<label htmlFor="currentPassword" className="edit-label">Contraseña actual</label>
+											<input
+												id="currentPassword"
+												name="currentPassword"
+												type="password"
+												value={passwordForm.currentPassword}
+												onChange={handlePasswordChange}
+												placeholder="••••••••"
+												className="edit-input"
+												required
+											/>
 										</div>
-										<div className="input-row">
-											<label>
-												<span className="sr-only">Nueva contraseña</span>
-												<input
-													name="newPassword"
-													type="password"
-													value={passwordForm.newPassword}
-													onChange={handlePasswordChange}
-													placeholder="Nueva contraseña"
-													required
-												/>
-											</label>
+
+										<div className="edit-input-group">
+											<label htmlFor="newPassword" className="edit-label">Nueva contraseña</label>
+											<input
+												id="newPassword"
+												name="newPassword"
+												type="password"
+												value={passwordForm.newPassword}
+												onChange={handlePasswordChange}
+												placeholder="••••••••"
+												className="edit-input"
+												required
+											/>
 										</div>
-										<div className="input-row">
-											<label>
-												<span className="sr-only">Confirmar nueva contraseña</span>
-												<input
-													name="confirmPassword"
-													type="password"
-													value={passwordForm.confirmPassword}
-													onChange={handlePasswordChange}
-													placeholder="Confirmar nueva contraseña"
-													required
-												/>
-											</label>
+
+										<div className="edit-input-group">
+											<label htmlFor="confirmPassword" className="edit-label">Confirmar nueva contraseña</label>
+											<input
+												id="confirmPassword"
+												name="confirmPassword"
+												type="password"
+												value={passwordForm.confirmPassword}
+												onChange={handlePasswordChange}
+												placeholder="••••••••"
+												className="edit-input"
+												required
+											/>
 										</div>
-										<div className="button-group">
+
+										<div className="edit-button-group">
 											<button
-												className="edit-profile-btn"
+												className="edit-btn edit-btn--primary"
 												type="submit"
 												disabled={changingPassword}
-												style={{ flex: 1 }}
 											>
-												{changingPassword ? 'Cambiando…' : 'Confirmar'}
+												{changingPassword ? (
+													<>
+														<span className="edit-spinner-small"></span>
+														Cambiando...
+													</>
+												) : (
+													'Confirmar cambio'
+												)}
 											</button>
 											<button
-												className="edit-profile-btn"
+												className="edit-btn edit-btn--ghost"
 												type="button"
 												onClick={() => {
 													setShowPasswordForm(false);
 													setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
 													setError('');
 												}}
-												style={{ flex: 1, background: '#666' }}
 											>
 												Cancelar
 											</button>
@@ -376,18 +414,33 @@ const EditProfile: React.FC = () => {
 									</form>
 								)}
 							</div>
-							
-							<button
-								className="edit-profile-delete"
-								type="button"
-								onClick={handleDeleteAccount}
-								disabled={deleting}
-								style={{ background: '#ff4d4f', color: '#fff', marginTop: 20 }}
-							>
-								{deleting ? 'Eliminando…' : 'Eliminar cuenta'}
-							</button>
+
+							{/* Zona de peligro */}
+							<div className="edit-danger-zone">
+								<div className="edit-section-header">
+									<h3>Zona de peligro</h3>
+									<p>Eliminar tu cuenta es permanente e irreversible</p>
+								</div>
+
+								<button
+									className="edit-btn edit-btn--danger"
+									type="button"
+									onClick={handleDeleteAccount}
+									disabled={deleting}
+								>
+									{deleting ? (
+										<>
+											<span className="edit-spinner-small"></span>
+											Eliminando cuenta...
+										</>
+									) : (
+										'Eliminar cuenta permanentemente'
+									)}
+								</button>
+							</div>
 						</>
 					)}
+
 					{showToast && (
 						<Toast message={toastMessage} type="success" />
 					)}

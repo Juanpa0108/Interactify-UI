@@ -4,12 +4,10 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../config/firebase";
 import "./Navbar.scss";
 
-/**
- * Clean Navbar component
- */
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const token =
@@ -22,6 +20,18 @@ const Navbar: React.FC = () => {
     return () => unsub();
   }, []);
 
+  // Prevenir scroll cuando el menú móvil está abierto
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMobileMenuOpen]);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -32,10 +42,12 @@ const Navbar: React.FC = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     setIsAuthenticated(false);
+    setIsMobileMenuOpen(false);
     navigate("/login");
   };
 
   const handleJoinMeeting = () => {
+    setIsMobileMenuOpen(false);
     const code = window.prompt("Ingresa el código de la reunión:");
     if (!code) return;
 
@@ -45,19 +57,40 @@ const Navbar: React.FC = () => {
     navigate(`/meeting/${trimmed}`);
   };
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <header className="navbar">
       <div className="navbar__inner app-content">
-        <Link to="/" className="navbar__logo">
+        <Link to="/" className="navbar__logo" onClick={closeMobileMenu}>
           <span className="navbar__brand">Interactify</span>
         </Link>
 
-        <nav className="navbar__nav" aria-label="Navegación principal">
+        {/* Botón hamburguesa */}
+        <button
+          className={`navbar__hamburger ${isMobileMenuOpen ? "navbar__hamburger--open" : ""}`}
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle menu"
+          aria-expanded={isMobileMenuOpen}
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        {/* Navegación desktop y móvil */}
+        <nav
+          className={`navbar__nav ${isMobileMenuOpen ? "navbar__nav--open" : ""}`}
+          aria-label="Navegación principal"
+        >
           <NavLink
             to="/"
             className={({ isActive }) =>
               `navbar__link ${isActive ? "navbar__link--active" : ""}`
             }
+            onClick={closeMobileMenu}
             end
           >
             Inicio
@@ -68,11 +101,11 @@ const Navbar: React.FC = () => {
             className={({ isActive }) =>
               `navbar__link ${isActive ? "navbar__link--active" : ""}`
             }
+            onClick={closeMobileMenu}
           >
             Sobre nosotros
           </NavLink>
 
-          {/* NUEVO: opción de unirse a una reunión por código */}
           <button
             type="button"
             className="navbar__link"
@@ -88,6 +121,7 @@ const Navbar: React.FC = () => {
                 className={({ isActive }) =>
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
+                onClick={closeMobileMenu}
               >
                 Crear reunión
               </NavLink>
@@ -96,6 +130,7 @@ const Navbar: React.FC = () => {
                 className={({ isActive }) =>
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
+                onClick={closeMobileMenu}
               >
                 Perfil
               </NavLink>
@@ -114,6 +149,7 @@ const Navbar: React.FC = () => {
                 className={({ isActive }) =>
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
+                onClick={closeMobileMenu}
               >
                 Iniciar sesión
               </NavLink>
@@ -122,12 +158,22 @@ const Navbar: React.FC = () => {
                 className={({ isActive }) =>
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
+                onClick={closeMobileMenu}
               >
                 Registro
               </NavLink>
             </>
           )}
         </nav>
+
+        {/* Overlay para cerrar el menú al hacer clic fuera */}
+        {isMobileMenuOpen && (
+          <div
+            className="navbar__overlay"
+            onClick={closeMobileMenu}
+            aria-hidden="true"
+          />
+        )}
       </div>
     </header>
   );
