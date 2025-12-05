@@ -1,5 +1,10 @@
 import "./About.scss";
 
+/**
+ * About component for Interactify.
+ * Displays information about the company and platform.
+ * @returns {JSX.Element} About page content.
+ */
 const About: React.FC = () => {
   return (
     <div className="about app-content">
