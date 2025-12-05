@@ -7,9 +7,6 @@ import type { User } from 'firebase/auth';
 import '../styles/EditProfile.css';
 import { auth } from '../config/firebase';
 
-/**
- * API base URL for backend requests.
- */
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ENDPOINT_GET = `${API_URL}/api/user/profile`;
 const ENDPOINT_UPDATE = `${API_URL}/api/user/update`;
@@ -22,12 +19,6 @@ type UserData = {
 	email: string;
 };
 
-/**
- * EditProfile component for Interactify.
- * Allows authenticated users to view and update their profile information.
- * Handles profile fetch, update, and account deletion.
- * @returns {JSX.Element} Profile edit form and controls.
- */
 const EditProfile: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<UserData | null>(null);
@@ -103,19 +94,11 @@ const EditProfile: React.FC = () => {
 		);
 	}, [form, user]);
 
-	/**
-	 * Handles input changes for the profile form.
-	 * @param {React.ChangeEvent<HTMLInputElement>} e - Input change event.
-	 */
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setForm((prev) => ({ ...prev, [name]: value }));
 	};
 
-	/**
-	 * Handles saving updated profile information.
-	 * @param {React.FormEvent} e - Form submit event.
-	 */
 	const handleSave = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setSaving(true);
@@ -250,136 +233,6 @@ const EditProfile: React.FC = () => {
 		}
 	};
 
-	const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		setPasswordForm((prev) => ({ ...prev, [name]: value }));
-	};
-
-	const handleChangePassword = async (e: React.FormEvent) => {
-		e.preventDefault();
-		if (!firebaseUser) return;
-		
-		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-			setError('Las contraseñas nuevas no coinciden');
-			return;
-		}
-		
-		if (passwordForm.newPassword.length < 6) {
-			setError('La nueva contraseña debe tener al menos 6 caracteres');
-			return;
-		}
-		
-		setChangingPassword(true);
-		setError('');
-		
-		try {
-			// Reautenticar con Firebase para validar contraseña actual
-			const { EmailAuthProvider, reauthenticateWithCredential } = await import('firebase/auth');
-			const credential = EmailAuthProvider.credential(
-				firebaseUser.email!,
-				passwordForm.currentPassword
-			);
-			await reauthenticateWithCredential(firebaseUser, credential);
-			
-			// Obtener token fresco después de reautenticar
-			const idToken = await firebaseUser.getIdToken(true);
-			
-			const res = await fetch(ENDPOINT_CHANGE_PASSWORD, {
-				method: 'POST',
-				headers: {
-					'Authorization': `Bearer ${idToken}`,
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					currentPassword: passwordForm.currentPassword,
-					newPassword: passwordForm.newPassword,
-				}),
-			});
-			
-			if (!res.ok) {
-				const data = await res.json();
-				throw new Error(data.error || 'No se pudo cambiar la contraseña');
-			}
-			
-		setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-		setShowPasswordForm(false);
-		setToastMessage('¡Contraseña actualizada correctamente!');
-		setShowToast(true);
-		setError('');
-		setTimeout(() => setShowToast(false), 2500);
-		} catch (err: any) {
-			if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-				setError('La contraseña actual es incorrecta');
-			} else {
-				setError(err.message || 'Error al cambiar la contraseña');
-			}
-		} finally {
-			setChangingPassword(false);
-		}
-	};
-
-	const handleDeleteAccount = async () => {
-		if (!firebaseUser) return;
-		const ok = window.confirm('¿Estás seguro? Esta acción eliminará tu cuenta permanentemente.');
-		if (!ok) return;
-		setDeleting(true);
-		setError('');
-		try {
-			const idToken = await firebaseUser.getIdToken();
-			const res = await fetch(ENDPOINT_DELETE, {
-				method: 'DELETE',
-				headers: {
-					'Authorization': `Bearer ${idToken}`,
-					'Content-Type': 'application/json',
-				},
-			});
-			if (!res.ok) throw new Error('No se pudo eliminar la cuenta');
-			// Sign out locally and clear storage
-			await auth.signOut();
-			localStorage.clear();
-			navigate('/');
-		} catch (err: any) {
-			setError(err.message || 'Error al eliminar la cuenta');
-		} finally {
-			setDeleting(false);
-		}
-	};
-
-<<<<<<< Updated upstream
-=======
-	/**
-	 * Handles account deletion for the authenticated user.
-	 */
-	const handleDeleteAccount = async () => {
-		if (!firebaseUser) return;
-		const ok = window.confirm('¿Estás seguro? Esta acción eliminará tu cuenta permanentemente.');
-		if (!ok) return;
-		setDeleting(true);
-		setError('');
-		try {
-			const idToken = await firebaseUser.getIdToken();
-			const res = await fetch(ENDPOINT_DELETE, {
-				method: 'DELETE',
-				headers: {
-					'Authorization': `Bearer ${idToken}`,
-					'Content-Type': 'application/json',
-				},
-			});
-			if (!res.ok) throw new Error('No se pudo eliminar la cuenta');
-			/**
-			 * Sign out locally and clear local storage.
-			 */
-			await auth.signOut();
-			localStorage.clear();
-			navigate('/');
-		} catch (err: any) {
-			setError(err.message || 'Error al eliminar la cuenta');
-		} finally {
-			setDeleting(false);
-		}
-	};
-
->>>>>>> Stashed changes
 	if (!firebaseUser) {
 		return null;
 	}
