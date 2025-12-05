@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Loader from '../components/Loader';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 
 import '../styles/Login.css';
@@ -10,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const imgSrc = '/loginImage.png';
   const logoSrc = '/logoInteractify.jpeg';
 
@@ -43,7 +44,9 @@ const Login: React.FC = () => {
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user || userCredential.user));
-      navigate('/');
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Error en login:', err);
       setError(err.message || 'Error al iniciar sesión');
@@ -76,13 +79,19 @@ const Login: React.FC = () => {
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user || result.user));
-      navigate('/');
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error('Error en login con Google:', err);
       const msg = String(err?.message || err);
       // If popup fails due to COOP/popup blocking, fall back to redirect flow
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
+          // Save the intended path before starting redirect flow so we
+          // can restore it after the OAuth redirect completes.
+          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
+          sessionStorage.setItem('postAuthRedirect', intended);
           await signInWithRedirect(auth, googleProvider);
           return; // redirect started; user will be returned to app
         } catch (redirectErr) {
@@ -110,12 +119,16 @@ const Login: React.FC = () => {
       localStorage.setItem('token', idToken);
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(data.user || result.user));
-      navigate('/');
+      const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
+      sessionStorage.removeItem('postAuthRedirect');
+      navigate(redirectTo);
     } catch (err: any) {
       console.error(err);
       const msg = String(err?.message || err);
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
+          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
+          sessionStorage.setItem('postAuthRedirect', intended);
           await signInWithRedirect(auth, githubProvider);
           return;
         } catch (redirectErr) {
