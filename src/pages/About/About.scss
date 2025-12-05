@@ -1,40 +1,311 @@
 @use "../../styles/variables" as *;
 
 .about {
-  padding: 2rem 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  min-height: calc(100vh - 8rem);
+
+  &__hero {
+    padding: 4rem 0 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  &__title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 3rem;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.98);
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__logo-container {
+    margin-bottom: 3rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  &__logo-wrapper {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    border-radius: 2rem;
+    background: radial-gradient(circle at top left, $color-primary, rgba(15, 23, 42, 0.6));
+    padding: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: 2rem;
+      background: linear-gradient(135deg, $color-primary, transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
+
+    &:hover::before {
+      opacity: 0.3;
+    }
+  }
+
+  &__logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 1.5rem;
+    background: white;
+  }
+
+  &__intro {
+    max-width: 65rem; // Aumentado de 46rem
+    font-size: 1.15rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+    margin: 0 auto;
+    text-align: center;
+    padding: 0 2rem;
+  }
+
+  &__content {
+    padding: 2rem 0 4rem;
+    max-width: 1200px; // Añadido para controlar el ancho máximo del contenido
+    margin: 0 auto;
+  }
+
+  &__section {
+    margin-bottom: 4rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &--highlight {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 1.5rem;
+      padding: 3rem;
+      margin-top: 3rem;
+    }
+  }
+
+  &__section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.98);
+    letter-spacing: -0.01em;
+  }
+
+  &__section-text {
+    max-width: 70rem; // Aumentado de 48rem
+    margin: 0 auto;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: center;
+    padding: 0 2rem;
+  }
+
+  &__features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); // Forzado a 3 columnas en desktop
+    gap: 2rem;
+    margin-top: 2.5rem;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  &__feature {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 1rem;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-8px);
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(148, 163, 184, 0.4);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: rgba(255, 255, 255, 0.98);
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  &__feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    line-height: 1;
+    filter: grayscale(0.2);
+    transition: transform 0.3s ease;
+  }
+
+  &__feature:hover &__feature-icon {
+    transform: scale(1.1);
+  }
 }
 
-.about h1 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  text-align: center;
+// Responsive
+@media (max-width: 1200px) {
+  .about {
+    &__intro {
+      max-width: 55rem;
+    }
+
+    &__section-text {
+      max-width: 60rem;
+    }
+
+    &__features {
+      max-width: 900px;
+    }
+  }
 }
 
-.about p {
-  max-width: 40rem;
-  width: 100%;
-  opacity: 0.85;
-  margin-bottom: 0.75rem;
-  text-align: justify;
-  box-sizing: border-box;
-  word-break: break-word;
-  hyphens: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  margin-left: auto;
-  margin-right: auto;
-  font-size: 1.25rem;
+@media (max-width: 900px) {
+  .about {
+    &__hero {
+      padding: 3rem 0 2rem;
+    }
+
+    &__title {
+      font-size: 2.5rem;
+      margin-bottom: 2rem;
+    }
+
+    &__logo-wrapper {
+      width: 240px;
+      height: 240px;
+    }
+
+    &__intro {
+      font-size: 1.05rem;
+      padding: 0 1.5rem;
+      max-width: 100%;
+    }
+
+    &__section-title {
+      font-size: 1.75rem;
+    }
+
+    &__section-text {
+      font-size: 1rem;
+      padding: 0 1.5rem;
+      max-width: 100%;
+    }
+
+    &__section--highlight {
+      padding: 2rem 1.5rem;
+    }
+
+    &__features {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
 }
 
-@media (max-width: 600px) {
-  .about p {
-    max-width: 100%;
-    font-size: 1rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+@media (max-width: 640px) {
+  .about {
+    &__hero {
+      padding: 2rem 0 1.5rem;
+    }
+
+    &__title {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    &__logo-wrapper {
+      width: 200px;
+      height: 200px;
+      padding: 1rem;
+    }
+
+    &__intro {
+      font-size: 1rem;
+      padding: 0 1rem;
+    }
+
+    &__section {
+      margin-bottom: 3rem;
+    }
+
+    &__section-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    &__section-text {
+      font-size: 0.95rem;
+      padding: 0 1rem;
+    }
+
+    &__section--highlight {
+      padding: 1.5rem 1rem;
+      margin-top: 2rem;
+    }
+
+    &__feature {
+      padding: 1.5rem;
+
+      h3 {
+        font-size: 1.1rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+      }
+    }
+
+    &__feature-icon {
+      font-size: 2.5rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .about {
+    &__title {
+      font-size: 1.75rem;
+    }
+
+    &__logo-wrapper {
+      width: 180px;
+      height: 180px;
+    }
+
+    &__intro {
+      font-size: 0.95rem;
+    }
   }
 }

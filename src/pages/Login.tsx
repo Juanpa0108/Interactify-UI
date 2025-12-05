@@ -8,12 +8,6 @@ import { auth, githubProvider, googleProvider } from '../config/firebase';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-/**
- * Login component for Interactify.
- * Allows users to log in using email/password, Google, or GitHub.
- * Handles authentication, error display, and redirects after login.
- * @returns {JSX.Element} Login form and social login options.
- */
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,10 +20,6 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /**
-   * Handles login with email and password.
-   * @param {React.FormEvent} e - Form submit event.
-   */
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -65,22 +55,13 @@ const Login: React.FC = () => {
     }
   };
 
-  /**
-   * Handles login with Google using Firebase Auth.
-   */
   const handleGoogleLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      /**
-       * Authenticate with Google using Firebase Auth.
-       */
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
 
-      /**
-       * Verify authentication with backend server.
-       */
       const response = await fetch(`${API_URL}/api/auth/login/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,13 +83,11 @@ const Login: React.FC = () => {
     } catch (err: any) {
       console.error('Error en login con Google:', err);
       const msg = String(err?.message || err);
-      /**
-       * If popup fails due to COOP/popup blocking, fallback to redirect flow.
-       */
+      
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
           await signInWithRedirect(auth, googleProvider);
-          return; /** redirect started; user will be returned to app */
+          return;
         } catch (redirectErr) {
           console.error('Redirect fallback failed:', redirectErr);
         }
@@ -120,9 +99,6 @@ const Login: React.FC = () => {
     }
   };
 
-  /**
-   * Handles login with GitHub using Firebase Auth.
-   */
   const handleGitHubLogin = async () => {
     setError('');
     setLoading(true);
@@ -130,7 +106,9 @@ const Login: React.FC = () => {
       const result = await signInWithPopup(auth, githubProvider);
       const idToken = await result.user.getIdToken();
       const response = await fetch(`${API_URL}/api/auth/login/github`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }),
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ idToken }),
       });
       if (!response.ok) throw new Error('Login with GitHub failed');
       const data = await response.json();
@@ -155,51 +133,121 @@ const Login: React.FC = () => {
       }
 
       setError(err.message || 'Error al iniciar sesión con GitHub');
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
-    <div className="auth-page login-bg">
+    <div className="auth-page">
       <div className="auth-wrapper">
-        <div className="auth-image"><img src={imgSrc} alt="Team working" /></div>
+        <div className="auth-image">
+          <img src={imgSrc} alt="Team working" />
+        </div>
 
         <div className="auth-card">
           <div className="auth-card-inner">
             <div className="auth-header">
-              <img src={logoSrc} alt="logo" className="auth-logo" />
+              <img src={logoSrc} alt="Interactify logo" className="auth-logo" />
               <h1>Iniciar sesión</h1>
             </div>
-            <p className="lead">Bienvenido de nuevo — inicia sesión para continuar en Interactify.</p>
+            
+            <p className="auth-subtitle">
+              Bienvenido de nuevo — inicia sesión para continuar en Interactify.
+            </p>
 
-            {error && <div style={{ color: 'red', marginBottom: '1rem', padding: '0.5rem', background: '#fee', borderRadius: '4px' }}>{error}</div>}
+            {error && (
+              <div className="auth-error">
+                <span className="auth-error-icon">⚠️</span>
+                {error}
+              </div>
+            )}
 
             {loading ? (
-              <Loader />
+              <div className="auth-loader">
+                <Loader />
+              </div>
             ) : (
               <form className="auth-form" onSubmit={handleEmailLogin}>
-                <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                <div style={{ position: 'relative', width: '100%' }}>
-                  <input type={showPassword ? 'text' : 'password'} placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ paddingRight: 40 }} />
-                  <button type="button" aria-pressed={showPassword} onClick={() => setShowPassword(s => !s)} title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', border: 'none', background: 'transparent', padding: 4, cursor: 'pointer' }}>
-                    {showPassword ? '🙈' : '👁️'}
-                  </button>
+                <div className="auth-input-group">
+                  <label htmlFor="email" className="auth-label">Correo electrónico</label>
+                  <input 
+                    id="email"
+                    type="email" 
+                    placeholder="tu@email.com" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    required 
+                    className="auth-input"
+                  />
                 </div>
-                <div className="auth-row"><a className="auth-link" href="/recovery">¿Olvidaste tu contraseña?</a></div>
-                <button className="auth-btn" type="submit" disabled={loading}>{'Iniciar sesión'}</button>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-                  <small className="small">O continúa con</small>
-                  <div className="social-row">
-                    <button type="button" className="social-btn" onClick={handleGoogleLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px 20px' }}>
-                      <img src={'/googleLogo.png'} alt="google" style={{ height:32, width:32 }} />
-                    </button>
-                    <button type="button" className="social-btn" onClick={handleGitHubLogin} disabled={loading} style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: '8px 20px' }}>
-                      <img src={'/githubLogo.png'} alt="github" style={{ height:32, width:32 }} />
+
+                <div className="auth-input-group">
+                  <label htmlFor="password" className="auth-label">Contraseña</label>
+                  <div className="auth-password-wrapper">
+                    <input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="auth-input"
+                    />
+                    <button
+                      type="button"
+                      className="auth-password-toggle"
+                      onClick={() => setShowPassword(s => !s)}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? '👁️' : '👁️‍🗨️'}
                     </button>
                   </div>
                 </div>
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                  <span className="small">¿No tienes una cuenta? </span>
-                  <Link className="auth-link" to="/register">Crear una cuenta</Link>
+
+                <div className="auth-forgot">
+                  <Link to="/recovery" className="auth-link-forgot">
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+
+                <button className="auth-btn auth-btn-primary" type="submit" disabled={loading}>
+                  Iniciar sesión
+                </button>
+
+                <div className="auth-divider">
+                  <span>O continúa con</span>
+                </div>
+
+                <div className="auth-social">
+                  <button 
+                    type="button" 
+                    className="auth-social-btn" 
+                    onClick={handleGoogleLogin} 
+                    disabled={loading}
+                    aria-label="Continuar con Google"
+                  >
+                    <img src="/googleLogo.png" alt="" />
+                    <span>Google</span>
+                  </button>
+                  
+                  <button 
+                    type="button" 
+                    className="auth-social-btn" 
+                    onClick={handleGitHubLogin} 
+                    disabled={loading}
+                    aria-label="Continuar con GitHub"
+                  >
+                    <img src="/githubLogo.png" alt="" />
+                    <span>GitHub</span>
+                  </button>
+                </div>
+
+                <div className="auth-register">
+                  <span>¿No tienes una cuenta?</span>
+                  <Link to="/register" className="auth-link-register">
+                    Crear cuenta
+                  </Link>
                 </div>
               </form>
             )}
@@ -211,4 +259,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
- 
