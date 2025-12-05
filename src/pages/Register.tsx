@@ -101,17 +101,12 @@ const Register: React.FC = () => {
       localStorage.setItem('authToken', idToken);
       localStorage.setItem('user', JSON.stringify(userCredential.user));
 
-<<<<<<< Updated upstream
-      // Redirigir al home o dashboard
-      navigate('/');
-=======
       /**
        * Redirect back to the intended route (meeting link) if present.
        */
       const redirectTo = (location.state as any)?.from?.pathname || sessionStorage.getItem('postAuthRedirect') || '/';
       sessionStorage.removeItem('postAuthRedirect');
       navigate(redirectTo);
->>>>>>> Stashed changes
     } catch (err: any) {
       console.error('Error en registro:', err);
       let errorMessage = 'Error al crear la cuenta';

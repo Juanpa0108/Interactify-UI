@@ -95,18 +95,6 @@
   color: $color-text;
 }
 
-<<<<<<< Updated upstream
-=======
-/* Asegurar mismo tamaño para los botones de copiar
-   (Copiar código y Copiar link) dentro de CreateMeeting */
-.create-meeting__actions .btn--ghost {
-  min-width: 100px;      /* you can adjust 130 → 140, 150 as needed */
-  text-align: center;
-  justify-content: center;
-  display: inline-flex;
-}
-
->>>>>>> Stashed changes
 .btn--primary {
   background: $color-primary;
   color: #0f172a;

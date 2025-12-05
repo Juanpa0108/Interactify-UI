@@ -107,17 +107,6 @@ const Login: React.FC = () => {
        */
       if (err?.code === 'auth/popup-blocked' || err?.code === 'auth/popup-closed-by-user' || /Cross-Origin-Opener-Policy|Could not establish connection|popup blocked/i.test(msg)) {
         try {
-<<<<<<< Updated upstream
-=======
-          /**
-           * Save the intended path before starting redirect flow.
-           */
-          /**
-           * Restore the intended path after OAuth redirect completes.
-           */
-          const intended = (location.state as any)?.from?.pathname || window.location.pathname || '/';
-          sessionStorage.setItem('postAuthRedirect', intended);
->>>>>>> Stashed changes
           await signInWithRedirect(auth, googleProvider);
           return; /** redirect started; user will be returned to app */
         } catch (redirectErr) {
