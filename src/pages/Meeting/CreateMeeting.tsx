@@ -2,11 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CreateMeeting.scss";
 
-/**
- * CreateMeeting page component.
- * Generates a unique meeting ID and redirects the user to the meeting room.
- * Calls the backend when possible and falls back to a local ID for UX.
- */
 const CreateMeeting: React.FC = () => {
   const navigate = useNavigate();
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -15,7 +10,6 @@ const CreateMeeting: React.FC = () => {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Comprobamos si el usuario está autenticado (token de la API)
     const storedToken =
       localStorage.getItem("token") || localStorage.getItem("authToken");
     if (!storedToken) {
@@ -28,7 +22,6 @@ const CreateMeeting: React.FC = () => {
     (async () => {
       try {
         const apiUrl = (import.meta.env.VITE_API_URL as string) || "";
-        // Preferimos token fresco de Firebase Auth por si el de localStorage expiró
         let token = storedToken;
         try {
           const { auth } = await import("../../config/firebase");
@@ -95,90 +88,115 @@ const CreateMeeting: React.FC = () => {
   return (
     <div className="create-meeting app-content">
       <div className="create-meeting__card">
-        <h1>Creando tu reunión…</h1>
-        <p className="create-meeting__text">
+        <div className="create-meeting__header">
+          <div className="create-meeting__icon">🎥</div>
+          <h1>Creando tu reunión</h1>
+        </div>
+
+        <p className="create-meeting__description">
           Estamos generando un ID único para la sala y preparando el enlace de
           invitación.
         </p>
 
         {isRedirecting && (
-          <p className="create-meeting__status">Creando reunión…</p>
+          <div className="create-meeting__loading">
+            <div className="create-spinner"></div>
+            <p>Configurando tu sala...</p>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="create-meeting__error">
+            <span className="error-icon">⚠️</span>
+            <div className="error-content">
+              <p>{errorMessage}</p>
+              <button
+                className="create-btn create-btn--ghost"
+                type="button"
+                onClick={() => window.location.reload()}
+              >
+                Reintentar
+              </button>
+            </div>
+          </div>
         )}
 
         {createdMeetingId && (
-          <div className="create-meeting__result">
-            <h2 className="create-meeting__subtitle">Tu reunión está lista</h2>
-            <p className="create-meeting__hint">
-              Comparte este enlace o el código de la reunión con tu equipo.
-            </p>
-
-            {/* Código de reunión visible y copiables */}
-            <p className="create-meeting__code">
-              Código de reunión: <span>{createdMeetingId}</span>
-            </p>
-
-            <div className="create-meeting__actions create-meeting__actions--code">
-              <button
-                className="btn btn--ghost"
-                type="button"
-                onClick={() =>
-                  handleCopy(
-                    createdMeetingId,
-                    "Código copiado al portapapeles"
-                  )
-                }
-              >
-                Copiar código
-              </button>
+          <div className="create-meeting__success">
+            <div className="success-badge">
+              <span className="success-icon">✓</span>
+              <span>Reunión lista</span>
             </div>
 
-            <div className="meeting-link-row">
-              <label className="create-meeting__label">
-                Enlace de invitación
-                <input
-                  readOnly
-                  value={inviteUrl}
-                  aria-label="Enlace de invitación a la reunión"
-                />
-              </label>
+            <p className="create-meeting__hint">
+              Comparte este código o enlace con tu equipo para que se unan
+            </p>
 
-              <div className="create-meeting__actions create-meeting__actions--link">
+            {/* Código de reunión */}
+            <div className="create-meeting__code-section">
+              <label className="create-meeting__label">
+                <span className="label-icon">🔑</span>
+                Código de reunión
+              </label>
+              <div className="create-meeting__code-box">
+                <code className="meeting-code">{createdMeetingId}</code>
                 <button
-                  className="btn btn--ghost"
+                  className="create-btn create-btn--copy"
                   type="button"
                   onClick={() =>
-                    handleCopy(inviteUrl, "Link copiado al portapapeles")
+                    handleCopy(
+                      createdMeetingId,
+                      "✓ Código copiado"
+                    )
                   }
+                  title="Copiar código"
                 >
-                  Copiar link
-                </button>
-
-                <button
-                  className="btn btn--primary"
-                  type="button"
-                  disabled={!createdMeetingId}
-                  onClick={() => createdMeetingId &&
-                    navigate(`/meeting/${createdMeetingId}`, { replace: true })
-                  }
-                >
-                  Ir a la reunión
+                  📋
                 </button>
               </div>
             </div>
 
-            {copyMessage && <div className="toast">{copyMessage}</div>}
-            {errorMessage && (
-              <div className="error">
-                {errorMessage}
-                <div style={{ marginTop: 8 }}>
-                  <button
-                    className="btn btn--ghost"
-                    type="button"
-                    onClick={() => window.location.reload()}
-                  >
-                    Reintentar
-                  </button>
-                </div>
+            {/* Enlace de invitación */}
+            <div className="create-meeting__link-section">
+              <label className="create-meeting__label">
+                <span className="label-icon">🔗</span>
+                Enlace de invitación
+              </label>
+              <div className="create-meeting__input-group">
+                <input
+                  readOnly
+                  value={inviteUrl}
+                  aria-label="Enlace de invitación a la reunión"
+                  className="create-meeting__input"
+                />
+                <button
+                  className="create-btn create-btn--copy"
+                  type="button"
+                  onClick={() =>
+                    handleCopy(inviteUrl, "✓ Enlace copiado")
+                  }
+                  title="Copiar enlace"
+                >
+                  📋
+                </button>
+              </div>
+            </div>
+
+            {/* Acción principal */}
+            <button
+              className="create-btn create-btn--primary"
+              type="button"
+              disabled={!createdMeetingId}
+              onClick={() => createdMeetingId &&
+                navigate(`/meeting/${createdMeetingId}`, { replace: true })
+              }
+            >
+              Entrar a la reunión →
+            </button>
+
+            {copyMessage && (
+              <div className="create-toast">
+                {copyMessage}
               </div>
             )}
           </div>

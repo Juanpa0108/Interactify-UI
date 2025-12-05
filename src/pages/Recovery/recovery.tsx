@@ -1,31 +1,18 @@
-/**
- * Recovery.tsx
- * -----------------------
- * Password recovery page component.
- * Allows the user to input their email address
- * and sends a password recovery request to the backend.
- */
-
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FiMail } from "react-icons/fi";
+import { Link, useNavigate } from "react-router-dom";
 import "./recovery.css";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-
 const Recovery: React.FC = () => {
-  // State variables
   const [email, setEmail] = useState<string>("");
   const [message, setMessage] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   
   const navigate = useNavigate();
+  const logoSrc = '/logoInteractify.jpeg';
 
-  /**
-   * Handles email input changes.
-   */
   const handleEmailChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const newEmail = e.target.value;
     setEmail(newEmail);
@@ -37,16 +24,11 @@ const Recovery: React.FC = () => {
     if (message) setMessage("");
   };
 
-  /**
-   * Handles form submission.
-   * Sends request to backend and redirects on success.
-   */
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
-    // Basic email validation
     if (!email.includes("@") || !email.includes(".")) {
-      setError("Please enter a valid email address.");
+      setError("Por favor ingresa un correo electrónico válido.");
       setMessage("");
       return;
     }
@@ -57,7 +39,7 @@ const Recovery: React.FC = () => {
 
     try {
       const response = await fetch(
-         `${API_URL}/api/auth/forgot-password`,
+        `${API_URL}/api/auth/forgot-password`,
         {
           method: "POST",
           headers: {
@@ -70,17 +52,16 @@ const Recovery: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Redirect to reset password page with user ID
         if (data.id || data.userId) {
           navigate(`/resetPassword?id=${data.id || data.userId}`);
         } else {
-          setMessage("Recovery link sent successfully!");
+          setMessage("¡Enlace de recuperación enviado exitosamente!");
         }
       } else {
-        setError(data.message || "Failed to send recovery link.");
+        setError(data.message || "Error al enviar el enlace de recuperación.");
       }
     } catch (err) {
-      setError("An error occurred. Please try again later.");
+      setError("Ocurrió un error. Por favor intenta de nuevo.");
       console.error("Recovery error:", err);
     } finally {
       setLoading(false);
@@ -88,30 +69,75 @@ const Recovery: React.FC = () => {
   };
 
   return (
-    <div className="recovery-container">
-      <h2>🔒 Password Recovery</h2>
-      <p>Enter your email to receive a recovery link.</p>
+    <div className="recovery-page">
+      <div className="recovery-wrapper">
+        <div className="recovery-card">
+          <div className="recovery-header">
+            <img src={logoSrc} alt="Interactify logo" className="recovery-logo" />
+            <h1>Recuperar Contraseña</h1>
+          </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="input-container">
-          <FiMail className="icon" />
-          <input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={handleEmailChange}
-            required
-            disabled={loading}
-          />
+          <p className="recovery-subtitle">
+            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+          </p>
+
+          {error && (
+            <div className="recovery-error">
+              <span className="recovery-error-icon">⚠️</span>
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="recovery-success">
+              <span className="recovery-success-icon">✅</span>
+              {message}
+            </div>
+          )}
+
+          <form className="recovery-form" onSubmit={handleSubmit}>
+            <div className="recovery-input-group">
+              <label htmlFor="email" className="recovery-label">
+                Correo electrónico
+              </label>
+              <div className="recovery-input-wrapper">
+                <span className="recovery-input-icon">📧</span>
+                <input
+                  id="email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={handleEmailChange}
+                  required
+                  disabled={loading}
+                  className="recovery-input"
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="recovery-btn"
+            >
+              {loading ? (
+                <>
+                  <span className="recovery-spinner"></span>
+                  Enviando...
+                </>
+              ) : (
+                "Enviar enlace de recuperación"
+              )}
+            </button>
+
+            <div className="recovery-back">
+              <Link to="/login" className="recovery-link">
+                ← Volver al inicio de sesión
+              </Link>
+            </div>
+          </form>
         </div>
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Sending..." : "Send Link"}
-        </button>
-      </form>
-
-      {error && <p className="error">{error}</p>}
-      {message && <p className="message">{message}</p>}
+      </div>
     </div>
   );
 };
