@@ -49,22 +49,6 @@ const Home: React.FC = () => {
             el audio y el video en tiempo real.
           </p>
 
-          <div className="home__hero-actions">
-            <button
-              className="btn btn--primary"
-              onClick={() => navigate("/create")}
-            >
-              Crear reunión
-            </button>
-
-            <button
-              className="btn btn--ghost"
-              onClick={handleScrollToFeatures}
-            >
-              Ver funcionalidades
-            </button>
-          </div>
-
           {isAuthenticated && (
             <>
               <button
