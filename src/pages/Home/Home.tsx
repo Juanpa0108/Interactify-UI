@@ -1,10 +1,5 @@
 import "./Home.scss";
 import { useNavigate } from "react-router-dom";
-<<<<<<< Updated upstream
-=======
-import { useState, useEffect } from "react";
-import { auth } from "../../config/firebase";
->>>>>>> Stashed changes
 
 /**
  * Home page component.
@@ -13,36 +8,9 @@ import { auth } from "../../config/firebase";
 const Home: React.FC = () => {
   const navigate = useNavigate();
 
-<<<<<<< Updated upstream
   const handleScrollToFeatures = () => {
     const section = document.getElementById("features");
     section?.scrollIntoView({ behavior: "smooth" });
-=======
-  const [showJoinForm, setShowJoinForm] = useState(false);
-  const [joinCode, setJoinCode] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const current = auth.currentUser;
-    if (current) {
-      setIsAuthenticated(true);
-      return;
-    }
-    const unsub = auth.onAuthStateChanged((user) => {
-      setIsAuthenticated(!!user);
-    });
-    return () => unsub();
-  }, []);
-
-  const handleJoinSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = joinCode.trim();
-    if (!trimmed) return;
-    /**
-     * Using code as meetingId.
-     */
-    navigate(`/meeting/${trimmed}`);
->>>>>>> Stashed changes
   };
 
   return (
@@ -65,53 +33,12 @@ const Home: React.FC = () => {
             </button>
             <button
               className="btn btn--ghost"
-              onClick={handleScrollToFeatures}
+              type="button"
+              onClick={() => setShowJoinForm((prev) => !prev)}
             >
-              Ver funcionalidades
+              Unirse a una reunión
             </button>
           </div>
-=======
-            {isAuthenticated && (
-              <>
-                <button
-                  className="btn btn--primary"
-                  onClick={() => navigate("/create")}
-                >
-                  Crear reunión
-                </button>
-                <button
-                  className="btn btn--ghost"
-                  type="button"
-                  onClick={() => setShowJoinForm((prev) => !prev)}
-                >
-                  Unirse a una reunión
-                </button>
-              </>
-            )}
-          </div>
-
-          {isAuthenticated && showJoinForm && (
-            <form
-              className="home__join-form"
-              onSubmit={handleJoinSubmit}
-              aria-label="Unirse a una reunión mediante código"
-            >
-              <label className="home__join-label">
-                Código de reunión
-                <input
-                  type="text"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value)}
-                  placeholder="Ej: 2f9c8a1b..."
-                  aria-label="Código de reunión"
-                />
-              </label>
-              <button className="btn btn--secondary" type="submit">
-                Unirse
-              </button>
-            </form>
-          )}
->>>>>>> Stashed changes
         </div>
 
         <div className="home__hero-illustration">
@@ -156,40 +83,6 @@ const Home: React.FC = () => {
           </article>
         </div>
       </section>
-
-      {/* Mapa del sitio en la página de inicio 
-      <section
-        className="home__sitemap"
-        aria-labelledby="home-sitemap-title"
-      >
-       <h2 id="home-sitemap-title">Mapa del sitio</h2>
-
-        <div className="home__sitemap-grid">
-          <div className="home__sitemap-column">
-           
-            <ul className="home__sitemap-list">
-              <li>
-                <Link to="/" className="home__sitemap-link">
-                  Inicio
-                </Link>
-              </li>
-              <li>
-                <Link to="/about" className="home__sitemap-link">
-                  Sobre nosotros 
-                </Link>
-              </li>
-              <li>
-                <Link to="/create" className="home__sitemap-link">
-                  Crear reunión 
-                </Link>
-              </li>
-              {/* Si más adelante tienen Login / Profile / Help, se agregan aquí 
-            </ul>
-          </div> 
-
-          
-        </div>
-      </section> */}
     </div>
   );
 };

@@ -35,6 +35,16 @@ const Navbar: React.FC = () => {
     navigate("/login");
   };
 
+  const handleJoinMeeting = () => {
+    const code = window.prompt("Ingresa el código de la reunión:");
+    if (!code) return;
+
+    const trimmed = code.trim();
+    if (!trimmed) return;
+
+    navigate(`/meeting/${trimmed}`);
+  };
+
   return (
     <header className="navbar">
       <div className="navbar__inner app-content">
@@ -61,6 +71,15 @@ const Navbar: React.FC = () => {
           >
             Sobre nosotros
           </NavLink>
+
+          {/* NUEVO: opción de unirse a una reunión por código */}
+          <button
+            type="button"
+            className="navbar__link"
+            onClick={handleJoinMeeting}
+          >
+            Unirse a una reunión
+          </button>
 
 <<<<<<< Updated upstream
 =======
@@ -92,7 +111,7 @@ const Navbar: React.FC = () => {
                   `navbar__link ${isActive ? "navbar__link--active" : ""}`
                 }
               >
-                Editar perfil
+                Perfil
               </NavLink>
               <button
                 type="button"
