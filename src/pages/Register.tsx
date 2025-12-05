@@ -23,7 +23,6 @@ const Register: React.FC = () => {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -43,7 +42,6 @@ const Register: React.FC = () => {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitted(true);
     setError('');
     const ok = Object.values(requirements).every(Boolean);
     
