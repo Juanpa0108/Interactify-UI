@@ -5,6 +5,7 @@ import Chat from "../../components/Chat/Chat";
 import socketService from "../../services/socket";
 import { auth } from "../../config/firebase";
 import WebRTCManager from "../../services/webrtc";
+import KeyboardShortcutsGuide from "../../components/KeyboardShortcutsGuide/KeyboardShortcutsGuide";
 
 /**
  * Meeting page component.
@@ -29,6 +30,7 @@ const Meeting: React.FC = () => {
   const [showChat, setShowChat] = useState(true);
   const [ending, setEnding] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
   const rtcRef = React.useRef<WebRTCManager | null>(null);
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const audioCtxRef = React.useRef<AudioContext | null>(null);
@@ -236,6 +238,57 @@ animationFrameRef.current = requestAnimationFrame(tick);
     return () => { cancelled = true; };
   }, [id]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore shortcuts if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        // Allow Escape to close shortcuts guide even when typing
+        if (e.key === 'Escape' && showShortcutsGuide) {
+          e.preventDefault();
+          setShowShortcutsGuide(false);
+        }
+        return;
+      }
+
+      // Ctrl + D: Toggle microphone
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        handleToggleMic();
+      }
+      
+      // Ctrl + E: Toggle camera (placeholder for future implementation)
+      if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        // TODO: Implement camera toggle when video is added
+        console.log('Camera toggle shortcut (not yet implemented)');
+      }
+      
+      // Ctrl + H: Toggle chat
+      if (e.ctrlKey && e.key === 'h') {
+        e.preventDefault();
+        setShowChat(prev => !prev);
+      }
+      
+      // Ctrl + K: Show keyboard shortcuts guide
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        setShowShortcutsGuide(true);
+      }
+      
+      // Escape: Close shortcuts guide
+      if (e.key === 'Escape' && showShortcutsGuide) {
+        e.preventDefault();
+        setShowShortcutsGuide(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showShortcutsGuide, micOn, showChat]);
+
+
   const handleLeaveMeeting = () => {
     // Aquí puedes limpiar estado adicional si lo necesitan (cerrar sockets, etc.)
     navigate("/", { replace: true });
@@ -393,6 +446,14 @@ animationFrameRef.current = requestAnimationFrame(tick);
               aria-expanded={showChat}
               onClick={() => setShowChat(v => !v)}
             >{showChat ? 'Ocultar chat' : 'Mostrar chat'}</button>
+            <button
+              className="toolbar-btn shortcuts-btn"
+              onClick={() => setShowShortcutsGuide(true)}
+              aria-label="Mostrar atajos de teclado"
+              title="Atajos de teclado (Ctrl+K)"
+            >
+              ⌨️ Atajos
+            </button>
             {isHost ? (
               <button
                 className="toolbar-btn"
@@ -439,6 +500,12 @@ animationFrameRef.current = requestAnimationFrame(tick);
             />
           ))}
         </div>
+
+        {/* Keyboard Shortcuts Guide Modal */}
+        <KeyboardShortcutsGuide 
+          show={showShortcutsGuide} 
+          onClose={() => setShowShortcutsGuide(false)} 
+        />
       </section>
     </div>
   );
