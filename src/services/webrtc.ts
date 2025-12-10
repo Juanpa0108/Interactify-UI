@@ -24,9 +24,51 @@ class WebRTCManager {
     this.handleSocket();
   }
 
-  async initLocalAudio() {
-    if (this.localStream) return this.localStream;
-    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+  async initLocalMedia() {
+    if (this.localStream) {
+      console.log('[RTC] Local stream already exists, reusing');
+      return this.localStream;
+    }
+    
+    // Check for video input devices
+    let hasVideoInput = false;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      hasVideoInput = devices.some(device => device.kind === 'videoinput');
+      console.log('[RTC] Device enumeration:', {
+        totalDevices: devices.length,
+        hasVideoInput,
+        videoDevices: devices.filter(d => d.kind === 'videoinput').map(d => d.label)
+      });
+    } catch (err) {
+      console.warn('[RTC] Could not enumerate devices:', err);
+    }
+
+    // Request audio + video (if available)
+    try {
+      console.log('[RTC] Requesting getUserMedia with:', { audio: true, video: hasVideoInput });
+      this.localStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true, 
+        video: hasVideoInput 
+      });
+      console.log('[RTC] Got local stream:', {
+        audioTracks: this.localStream.getAudioTracks().length,
+        videoTracks: this.localStream.getVideoTracks().length,
+        videoEnabled: this.localStream.getVideoTracks()[0]?.enabled
+      });
+    } catch (err) {
+      console.warn('[RTC] Could not get video, falling back to audio only:', err);
+      // Fallback to audio only if video fails
+      this.localStream = await navigator.mediaDevices.getUserMedia({ 
+        audio: true, 
+        video: false 
+      });
+      console.log('[RTC] Fallback stream (audio only):', {
+        audioTracks: this.localStream.getAudioTracks().length,
+        videoTracks: this.localStream.getVideoTracks().length
+      });
+    }
+    
     return this.localStream;
   }
 
@@ -51,6 +93,15 @@ class WebRTCManager {
     this.localStream.getAudioTracks().forEach(t => (t.enabled = enabled));
   }
 
+  async toggleCamera(enabled: boolean) {
+    if (!this.localStream) return;
+    this.localStream.getVideoTracks().forEach(t => (t.enabled = enabled));
+  }
+
+  getLocalStream(): MediaStream | null {
+    return this.localStream;
+  }
+
   private createPeer(remoteId: PeerId) {
     if (this.peers.has(remoteId)) return this.peers.get(remoteId)!;
 
@@ -60,8 +111,9 @@ class WebRTCManager {
       ]
     });
 
-    // ensure an audio transceiver exists for predictable negotiation
+    // ensure transceivers exist for predictable negotiation
     pc.addTransceiver('audio', { direction: 'sendrecv' });
+    pc.addTransceiver('video', { direction: 'sendrecv' });
 
     // add local audio
     if (this.localStream) {
@@ -105,7 +157,7 @@ class WebRTCManager {
 
   private handleSocket() {
     this.socket.on('rtc:joined', async ({ from }: { from: PeerId }) => {
-      if (!this.localStream) await this.initLocalAudio();
+      if (!this.localStream) await this.initLocalMedia();
       const pc = this.createPeer(from);
       // letting onnegotiationneeded drive offers avoids wrong-state errors
       console.debug('[RTC] Peer joined ->', from, 'signaling:', pc.signalingState);
@@ -113,7 +165,7 @@ class WebRTCManager {
     });
 
     this.socket.on('rtc:offer', async ({ from, offer }: { from: PeerId, offer: RTCSessionDescriptionInit }) => {
-      if (!this.localStream) await this.initLocalAudio();
+      if (!this.localStream) await this.initLocalMedia();
       const pc = this.createPeer(from);
       const polite = true;
       const readyForOffer = pc.signalingState === 'stable' || (pc.signalingState === 'have-local-offer' && this.isSettingRemoteAnswerPending.get(from));

@@ -17,12 +17,13 @@ type UserData = {
 	firstName: string;
 	lastName: string;
 	email: string;
+	age?: number;
 };
 
 const EditProfile: React.FC = () => {
 	const navigate = useNavigate();
 	const [user, setUser] = useState<UserData | null>(null);
-	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', email: '' });
+	const [form, setForm] = useState<UserData>({ firstName: '', lastName: '', email: '', age: undefined });
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
 	const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
@@ -40,7 +41,7 @@ const EditProfile: React.FC = () => {
 			if (!fbUser) {
 				setFirebaseUser(null);
 				setUser(null);
-				setForm({ firstName: '', lastName: '', email: '' });
+				setForm({ firstName: '', lastName: '', email: '', age: undefined });
 				navigate('/login');
 				return;
 			}
@@ -75,6 +76,7 @@ const EditProfile: React.FC = () => {
 					firstName: data.firstName || '',
 					lastName: data.lastName || '',
 					email: data.email || '',
+					age: data.age || undefined,
 				});
 				setLoading(false);
 			} catch (err: any) {
@@ -90,13 +92,19 @@ const EditProfile: React.FC = () => {
 		if (!user) return;
 		setChanged(
 			form.firstName !== user.firstName ||
-			form.lastName !== user.lastName
+			form.lastName !== user.lastName ||
+			form.age !== user.age
 		);
 	}, [form, user]);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
-		setForm((prev) => ({ ...prev, [name]: value }));
+		if (name === 'age') {
+			const ageValue = value === '' ? undefined : parseInt(value, 10);
+			setForm((prev) => ({ ...prev, age: ageValue }));
+		} else {
+			setForm((prev) => ({ ...prev, [name]: value }));
+		}
 	};
 
 	const handleSave = async (e: React.FormEvent) => {
@@ -117,6 +125,7 @@ const EditProfile: React.FC = () => {
 				body: JSON.stringify({
 					firstName: form.firstName,
 					lastName: form.lastName,
+					age: form.age,
 				}),
 			});
 			if (!res.ok) throw new Error('No se pudo guardar');
@@ -126,6 +135,7 @@ const EditProfile: React.FC = () => {
 				...form,
 				firstName: updated.user.firstName,
 				lastName: updated.user.lastName,
+				age: updated.user.age,
 			});
 			setSaving(false);
 			setChanged(false);
@@ -295,21 +305,34 @@ const EditProfile: React.FC = () => {
 									</div>
 								</div>
 
-								<div className="edit-input-group">
-									<label htmlFor="email" className="edit-label">Correo electrónico</label>
-									<input
-										id="email"
-										name="email"
-										type="email"
-										value={form.email}
-										placeholder="tu@email.com"
-										className="edit-input edit-input--disabled"
-										disabled
-									/>
-									<span className="edit-helper-text">El correo no puede ser modificado</span>
-								</div>
+							<div className="edit-input-group">
+								<label htmlFor="email" className="edit-label">Correo electrónico</label>
+								<input
+									id="email"
+									name="email"
+									type="email"
+									value={form.email}
+									placeholder="tu@email.com"
+									className="edit-input edit-input--disabled"
+									disabled
+								/>
+								<span className="edit-helper-text">El correo no puede ser modificado</span>
+							</div>
 
-								<button 
+							<div className="edit-input-group">
+								<label htmlFor="age" className="edit-label">Edad</label>
+								<input
+									id="age"
+									name="age"
+									type="number"
+									value={form.age || ''}
+									onChange={handleChange}
+									placeholder="25"
+									className="edit-input"
+									min="1"
+									max="120"
+								/>
+							</div>								<button 
 									className="edit-btn edit-btn--primary" 
 									type="submit" 
 									disabled={!changed || saving}
