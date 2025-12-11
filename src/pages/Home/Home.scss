@@ -1,58 +1,6 @@
 @use '../../styles/_variables' as *;
 
 .home {
-  &__hero {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    gap: 2rem;
-    align-items: center;
-    padding: 3rem 0;
-  }
-
-  &__hero-text h1 {
-    font-size: 2.5rem;
-    line-height: 1.1;
-    margin-bottom: 1rem;
-  }
-
-  &__hero-text p {
-    max-width: 32rem;
-    opacity: 0.85;
-    margin-bottom: 1.5rem;
-    text-align: justify;
-  }
-
-  &__hero-actions {
-    display: flex;
-    gap: 1rem;
-  }
-
-  &__hero-illustration {
-    display: flex;
-    justify-content: center;
-  }
-
-  &__mockup {
-    width: 100%;
-    max-width: 420px;
-    height: 260px;
-    border-radius: 1.5rem;
-    background: radial-gradient(circle at top left, $color-primary, #0b1020);
-    border: 1px solid rgba(148, 163, 184, 0.4);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    opacity: 0.9;
-    overflow: hidden;
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 1.5rem;
-      display: block;
-    }
-  }
 
   &__features {
     padding: 2rem 0 4rem;
@@ -74,12 +22,44 @@
     h3 {
       text-align: center;
     }
+
     p {
-      text-align: justify;
+      text-align: center;     // antes: justify
+      line-height: 1.5;     // interlineado más amplio
+      margin-top: 0.75rem;  // un poquito de aire bajo el título
     }
   }
 
-  /* Formulario para unirse por código */
+  &__hero {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+    padding: 3rem 0;
+  }
+
+  &__hero-text h1 {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+
+  &__hero-text p {
+    max-width: 32rem;
+    opacity: 0.85;
+    margin-bottom: 1.2rem;
+    text-align: justify;
+  }
+
+  /* SOLO DOS BOTONES */
+  &__hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+
+  /* FORMULARIO UNIRSE */
   &__join-form {
     margin-top: 1rem;
     display: flex;
@@ -104,9 +84,32 @@
       font-size: 0.9rem;
     }
   }
+
+  /* ILUSTRACIÓN */
+  &__hero-illustration {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__mockup {
+    width: 100%;
+    max-width: 420px;
+    height: 260px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    background: rgba(15, 23, 42, 0.5);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
 }
 
-/* Botones generales */
+/* BOTONES */
 .btn {
   border-radius: 9999px;
   padding: 0.65rem 1.6rem;
@@ -116,7 +119,8 @@
   transition:
     background 0.15s ease,
     box-shadow 0.15s ease,
-    transform 0.15s ease;
+    transform 0.15s ease,
+    border-color 0.15s ease;
 
   &--primary {
     background: $color-primary;
@@ -132,11 +136,13 @@
 
   &--ghost {
     background: transparent;
-    border-color: rgba(148, 163, 184, 0.6);
+    border-width: 2px;                          // borde un poquito más grueso
+    border-color: rgba(148, 163, 184, 0.95);    // color más intenso
     color: $color-text;
 
     &:hover {
       background: rgba(15, 23, 42, 0.85);
+      border-color: $color-primary;             // resalta aún más al pasar el mouse
     }
   }
 
@@ -158,97 +164,11 @@
     text-align: center;
   }
 
-  .home__hero-text p {
-    margin-inline: auto;
-  }
-
   .home__hero-actions {
     justify-content: center;
   }
 
   .home__join-form {
     justify-content: center;
-  }
-
-  .home__hero-illustration {
-    order: -1;
-  }
-
-  .home__features-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Site map section on home */
-  .home {
-    &__sitemap {
-      padding: 2.5rem 0 3.5rem;
-      border-top: 1px solid rgba(148, 163, 184, 0.25);
-      margin-top: 1.5rem;
-    }
-
-    &__sitemap-description {
-      max-width: 36rem;
-      opacity: 0.85;
-      margin-top: 0.5rem;
-      margin-bottom: 1.5rem;
-    }
-
-    &__sitemap-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 2rem;
-    }
-
-    &__sitemap-column h3 {
-      font-size: 1rem;
-      margin-bottom: 0.75rem;
-    }
-
-    &__sitemap-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      gap: 0.4rem;
-    }
-
-    &__sitemap-link {
-      font-size: 0.9rem;
-      opacity: 0.85;
-      text-decoration: none;
-      transition: opacity 0.15s ease, transform 0.15s ease;
-
-      &:hover,
-      &:focus-visible {
-        opacity: 1;
-        transform: translateX(2px);
-      }
-
-      &--static {
-        cursor: default;
-        text-decoration: none;
-      }
-    }
-
-    &__flow-list {
-      padding-left: 1.25rem;
-      margin: 0;
-      display: grid;
-      gap: 0.5rem;
-
-      li {
-        font-size: 0.9rem;
-        opacity: 0.9;
-      }
-    }
-  }
-
-  /* Ajuste responsive del site map en dispositivos pequeños */
-  @media (max-width: 900px) {
-    .home {
-      &__sitemap-grid {
-        grid-template-columns: 1fr;
-      }
-    }
   }
 }

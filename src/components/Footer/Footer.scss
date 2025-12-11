@@ -6,12 +6,12 @@
   margin-top: 2rem;
   font-size: 0.85rem;
   width: 100%;
-}
 
-.footer__container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
+  &__container {
+    max-width: $max-width;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
 
   &__top {
     display: flex;

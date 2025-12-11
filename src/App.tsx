@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 
-
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Meeting from "./pages/Meeting/Meeting";
@@ -18,25 +17,27 @@ const App: React.FC = () => {
   /**
    * Application layout and routing.
    *
-   * Notes:
-   * - `Home` and `About` are public routes and should be visible even
-   *   when the user is not authenticated.
-   * - Routes that modify or access protected resources (create meeting,
-   *   join meeting, edit profile) are wrapped with `RequireAuth` which
-   *   redirects unauthenticated users to `/login`.
-   * - A skip link (`#main-content`) is included for keyboard accessibility.
+   * Accessibility notes (WCAG):
+   * - Provides a "skip to content" link for keyboard users (operable).
+   * - Uses a <main> region with role="main" as the primary landmark.
    */
   return (
     <div className="app-container">
       {/* Accessibility skip link: allows keyboard users to jump to main content */}
       <a href="#main-content" className="skip-link">
-        Skip to main content
+        Saltar al contenido principal
       </a>
 
       <Navbar />
 
       {/* Main region receives focus from the skip link */}
-      <main id="main-content" className="app-main" tabIndex={-1}>
+      <main
+        id="main-content"
+        className="app-main"
+        tabIndex={-1}
+        role="main"
+        aria-label="Contenido principal de Interactify"
+      >
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Home />} />
