@@ -1,10 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import React, { useEffect, useState } from "react";
+import { FaMicrophone, FaMicrophoneSlash, FaVideo, FaComments, FaPhoneSlash, FaKeyboard, FaCircle } from "react-icons/fa";
 import "./Meeting.scss";
 import Chat from "../../components/Chat/Chat";
 import socketService from "../../services/socket";
 import { auth } from "../../config/firebase";
 import WebRTCManager from "../../services/webrtc";
+import KeyboardShortcutsGuide from "../../components/KeyboardShortcutsGuide/KeyboardShortcutsGuide";
 
 /**
  * Meeting page component.
@@ -22,14 +24,19 @@ const Meeting: React.FC = () => {
   const [profileName, setProfileName] = useState<string>('');
   const [showAll, setShowAll] = useState(false);
   const [micOn, setMicOn] = useState(true);
+  const [videoOn, setVideoOn] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'desconectado'|'conectando'|'conectado'>('desconectado');
   const [remoteAudios, setRemoteAudios] = useState<Record<string, MediaStream>>({});
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStreams, setRemoteStreams] = useState<Record<string, MediaStream>>({});
   const [speakingPeers, setSpeakingPeers] = useState<Record<string, boolean>>({});
   const [showChat, setShowChat] = useState(true);
   const [ending, setEnding] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
   const rtcRef = React.useRef<WebRTCManager | null>(null);
+  const localVideoRef = React.useRef<HTMLVideoElement | null>(null);
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array }>>({});
@@ -129,6 +136,7 @@ const Meeting: React.FC = () => {
       const rtc = new WebRTCManager(socket, id || '', {
         onStream: (pid, stream) => {
           setRemoteAudios(prev => ({ ...prev, [pid]: stream }));
+          setRemoteStreams(prev => ({ ...prev, [pid]: stream }));
           // setup analyser per remote stream
           if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
           const ctx = audioCtxRef.current!;
@@ -141,7 +149,22 @@ const Meeting: React.FC = () => {
         }
       });
       rtcRef.current = rtc;
-      await rtc.initLocalAudio();
+      const stream = await rtc.initLocalMedia();
+      setLocalStream(stream);
+      
+      // Check if video tracks exist and set initial state
+      if (stream) {
+        const videoTracks = stream.getVideoTracks();
+        const hasVideo = videoTracks.length > 0;
+        console.log('[Meeting] Local media initialized', {
+          hasVideo,
+          videoEnabled: hasVideo ? videoTracks[0].enabled : false,
+          audioTracks: stream.getAudioTracks().length
+        });
+        // Start with video ON if available
+        setVideoOn(hasVideo);
+      }
+      
       setConnectionStatus('conectando');
       await rtc.join();
 
@@ -154,7 +177,7 @@ const analyser = ctx.createAnalyser();
 analyser.fftSize = 512;
 analyserRef.current = analyser;
 
-const src = ctx.createMediaStreamSource((await rtc.initLocalAudio())!);
+const src = ctx.createMediaStreamSource(stream!);
 src.connect(analyser);
 
 // 🔥 FIX: crear ArrayBuffer explícito para evitar crash en deploy
@@ -207,6 +230,17 @@ animationFrameRef.current = requestAnimationFrame(tick);
     void init();
   }, []);
 
+  // Sync localStream with video element
+  useEffect(() => {
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+      console.log('[Meeting] Local stream attached to video element', {
+        videoTracks: localStream.getVideoTracks().length,
+        audioTracks: localStream.getAudioTracks().length
+      });
+    }
+  }, [localStream]);
+
   // Check if current user is the meeting host
   useEffect(() => {
     let cancelled = false;
@@ -235,6 +269,58 @@ animationFrameRef.current = requestAnimationFrame(tick);
     checkHost();
     return () => { cancelled = true; };
   }, [id]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore shortcuts if user is typing in an input or textarea
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        // Allow Escape to close shortcuts guide even when typing
+        if (e.key === 'Escape' && showShortcutsGuide) {
+          e.preventDefault();
+          setShowShortcutsGuide(false);
+        }
+        return;
+      }
+
+      // Ctrl + D: Toggle microphone
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        handleToggleMic();
+      }
+      
+      // Ctrl + E: Toggle camera
+      if (e.ctrlKey && e.key === 'e') {
+        e.preventDefault();
+        const next = !videoOn;
+        setVideoOn(next);
+        rtcRef.current?.toggleCamera(next);
+      }
+      
+      // Ctrl + H: Toggle chat
+      if (e.ctrlKey && e.key === 'h') {
+        e.preventDefault();
+        setShowChat(prev => !prev);
+      }
+      
+      // Ctrl + K: Show keyboard shortcuts guide
+      if (e.ctrlKey && e.key === 'k') {
+        e.preventDefault();
+        setShowShortcutsGuide(true);
+      }
+      
+      // Escape: Close shortcuts guide
+      if (e.key === 'Escape' && showShortcutsGuide) {
+        e.preventDefault();
+        setShowShortcutsGuide(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showShortcutsGuide, micOn, showChat]);
+
 
   const handleLeaveMeeting = () => {
     // Aquí puedes limpiar estado adicional si lo necesitan (cerrar sockets, etc.)
@@ -331,7 +417,19 @@ animationFrameRef.current = requestAnimationFrame(tick);
           <div className="meeting__video-grid">
             <div className="meeting__video-tile meeting__video-tile--main">
               <div className="meeting__video-simulated">
-                <div className="meeting__avatar">{(profileName || 'Tú').slice(0,1)}</div>
+                {(!localStream || localStream.getVideoTracks().length === 0 || !videoOn) && (
+                  <div className="meeting__avatar">{(profileName || 'Tú').slice(0,1)}</div>
+                )}
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="meeting__video-element"
+                  style={{ 
+                    display: localStream && localStream.getVideoTracks().length > 0 && videoOn ? 'block' : 'none'
+                  }}
+                />
                 <span className="meeting__video-label">{profileName || 'Tú'}</span>
                 <button className={`meeting__mic-fab ${micOn ? 'on' : 'off'}`} onClick={handleToggleMic} aria-label="Toggle mic">
                   {micOn ? 'Mic ON' : 'Mic OFF'}
@@ -341,21 +439,39 @@ animationFrameRef.current = requestAnimationFrame(tick);
             </div>
 
             {/* Render only connected users with active audio streams */}
-            {onlineUsers.filter(u => remoteAudios[u.socketId]).slice(0,3).map(({ socketId, userId }) => (
-              <div key={socketId} className="meeting__video-tile">
-                <div className="meeting__video-simulated">
-                  <div className="meeting__avatar">{(userId || socketId).slice(0,2).toUpperCase()}</div>
-                  <span className="meeting__video-label">{userId || socketId}</span>
-                  {speakingPeers[socketId] && <div className="meeting__speaking-pulse" aria-hidden="true" />}
+            {onlineUsers.filter(u => remoteStreams[u.socketId]).slice(0,3).map(({ socketId, userId }) => {
+              const stream = remoteStreams[socketId];
+              const hasVideo = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+              
+              return (
+                <div key={socketId} className="meeting__video-tile">
+                  <div className="meeting__video-simulated">
+                    {hasVideo ? (
+                      <video
+                        autoPlay
+                        playsInline
+                        className="meeting__video-element"
+                        ref={node => {
+                          if (node && stream) {
+                            try { node.srcObject = stream; } catch {}
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="meeting__avatar">{(userId || socketId).slice(0,2).toUpperCase()}</div>
+                    )}
+                    <span className="meeting__video-label">{userId || socketId}</span>
+                    {speakingPeers[socketId] && <div className="meeting__speaking-pulse" aria-hidden="true" />}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* If there are more participants, show a small pill/button */}
-            {onlineUsers.filter(u => remoteAudios[u.socketId]).length > 3 && (
+            {onlineUsers.filter(u => remoteStreams[u.socketId]).length > 3 && (
               <div style={{ display: 'flex', alignItems: 'center', marginLeft: 12 }}>
                 <button className="btn btn--ghost" onClick={() => setShowAll(true)}>
-                  Ver más participantes ({Math.min(onlineUsers.filter(u => remoteAudios[u.socketId]).length, 10)})
+                  Ver más participantes ({Math.min(onlineUsers.filter(u => remoteStreams[u.socketId]).length, 10)})
                 </button>
               </div>
             )}
@@ -370,7 +486,7 @@ animationFrameRef.current = requestAnimationFrame(tick);
                   <button className="btn" onClick={() => setShowAll(false)}>Cerrar</button>
                 </div>
                 <ul className="participants-list">
-                  {onlineUsers.filter(u => remoteAudios[u.socketId]).slice(0, 10).map((u, i) => (
+                  {onlineUsers.filter(u => remoteStreams[u.socketId]).slice(0, 10).map((u, i) => (
                     <li key={u.socketId + i} className="participant-item">{u.userId || u.socketId}</li>
                   ))}
                 </ul>
@@ -378,37 +494,73 @@ animationFrameRef.current = requestAnimationFrame(tick);
             </div>
           )}
           <p className="meeting__hint">
-            Nota: el video en tiempo real se implementará en los próximos
-            sprints. Esta vista solo representa el diseño de la sala.
+            Video en tiempo real habilitado. Haz clic en el ícono de cámara para activar/desactivar tu video.
           </p>
           <div className="meeting__controls meeting__controls--in-card" role="toolbar" aria-label="Controles de la reunión">
-          <div className="meeting__toolbar">
-            <button className={`toolbar-btn ${micOn ? 'active' : ''}`} onClick={handleToggleMic}>
-              {micOn ? 'Micrófono ON' : 'Micrófono OFF'}
-            </button>
-            <button className="toolbar-btn" disabled>Video (próximamente)</button>
-            <button
-              className="toolbar-btn"
-              aria-controls="meeting-chat-panel"
-              aria-expanded={showChat}
-              onClick={() => setShowChat(v => !v)}
-            >{showChat ? 'Ocultar chat' : 'Mostrar chat'}</button>
-            {isHost ? (
+            <div className="meeting__toolbar">
               <button
-                className="toolbar-btn"
-                onClick={handleEndMeeting}
-                aria-label="Finalizar reunión"
-              >{ending ? 'Finalizando…' : 'Finalizar reunión'}</button>
-            ) : (
+                className={`toolbar-btn icon ${micOn ? 'active' : ''}`}
+                onClick={handleToggleMic}
+                aria-label={micOn ? 'Apagar micrófono' : 'Encender micrófono'}
+                title={micOn ? 'Apagar micrófono' : 'Encender micrófono'}
+              >
+                {micOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
+              </button>
               <button
-                className="toolbar-btn leave"
-                onClick={handleEndMeeting}
-                aria-label="Salir de la reunión"
-              >Salir</button>
-            )}
-            <span className="toolbar-status" aria-live="polite">Estado: {connectionStatus}</span>
-          </div>
-          <span className={`speaking-indicator ${speaking ? 'speaking' : ''}`}>Hablas</span>
+                className={`toolbar-btn icon ${videoOn ? 'active' : ''}`}
+                onClick={async () => {
+                  const next = !videoOn;
+                  setVideoOn(next);
+                  await rtcRef.current?.toggleCamera(next);
+                }}
+                aria-label={videoOn ? 'Apagar cámara' : 'Encender cámara'}
+                title={videoOn ? 'Apagar cámara' : 'Encender cámara'}
+              >
+                <FaVideo />
+              </button>
+              <button
+                className={`toolbar-btn icon ${showChat ? 'active' : ''}`}
+                aria-controls="meeting-chat-panel"
+                aria-expanded={showChat}
+                onClick={() => setShowChat(v => !v)}
+                aria-label={showChat ? 'Ocultar chat' : 'Mostrar chat'}
+                title={showChat ? 'Ocultar chat' : 'Mostrar chat'}
+              >
+                <FaComments />
+              </button>
+              <button
+                className="toolbar-btn icon shortcuts-btn"
+                onClick={() => setShowShortcutsGuide(true)}
+                aria-label="Mostrar atajos de teclado"
+                title="Atajos de teclado (Ctrl+K)"
+              >
+                <FaKeyboard />
+              </button>
+              {isHost ? (
+                <button
+                  className="toolbar-btn icon end danger"
+                  onClick={handleEndMeeting}
+                  aria-label="Finalizar reunión"
+                  title="Finalizar reunión"
+                  disabled={ending}
+                >
+                  <FaPhoneSlash />
+                </button>
+              ) : (
+                <button
+                  className="toolbar-btn icon leave danger"
+                  onClick={handleEndMeeting}
+                  aria-label="Colgar llamada"
+                  title="Colgar llamada"
+                >
+                  <FaPhoneSlash />
+                </button>
+              )}
+              <span className="toolbar-status" aria-live="polite" title={`Estado: ${connectionStatus}`}>
+                <FaCircle style={{ marginRight: 6 }} /> {connectionStatus}
+              </span>
+            </div>
+            <span className={`speaking-indicator ${speaking ? 'speaking' : ''}`} aria-live="polite">Hablas</span>
           </div>
 
         </div>
@@ -439,6 +591,12 @@ animationFrameRef.current = requestAnimationFrame(tick);
             />
           ))}
         </div>
+
+        {/* Keyboard Shortcuts Guide Modal */}
+        <KeyboardShortcutsGuide 
+          show={showShortcutsGuide} 
+          onClose={() => setShowShortcutsGuide(false)} 
+        />
       </section>
     </div>
   );

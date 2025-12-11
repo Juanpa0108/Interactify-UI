@@ -22,6 +22,11 @@ const Home: React.FC = () => {
     return () => unsub();
   }, []);
 
+  const handleScrollToFeatures = () => {
+    const section = document.getElementById("features");
+    section?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const handleJoinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = joinCode.trim();
@@ -41,27 +46,44 @@ const Home: React.FC = () => {
             el audio y el video en tiempo real.
           </p>
 
-          {/* BOTONES PRINCIPALES */}
-          {isAuthenticated && (
-            <div className="home__hero-actions">
-              <button
-                className="btn btn--primary"
-                onClick={() => navigate("/create")}
-              >
-                Crear reunión
-              </button>
+          <div className="home__hero-actions">
+            {isAuthenticated ? (
+              <>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => navigate("/create")}
+                >
+                  Crear reunión
+                </button>
 
-              <button
-                className="btn btn--secondary"
-                type="button"
-                onClick={() => setShowJoinForm((prev) => !prev)}
-              >
-                Unirse a una reunión
-              </button>
-            </div>
-          )}
+                <button
+                  className="btn btn--ghost"
+                  type="button"
+                  onClick={() => setShowJoinForm((prev) => !prev)}
+                >
+                  Unirse a una reunión
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="btn btn--primary"
+                  onClick={() => navigate("/login")}
+                >
+                  Comenzar ahora
+                </button>
 
-          {/* FORMULARIO PARA UNIRSE */}
+                <button
+                  className="btn btn--ghost"
+                  onClick={handleScrollToFeatures}
+                >
+                  Ver funcionalidades
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* FORMULARIO DE UNIRSE */}
           {isAuthenticated && showJoinForm && (
             <form
               className="home__join-form"
@@ -90,7 +112,7 @@ const Home: React.FC = () => {
           <div className="home__mockup">
             <img
               src="/video-conferencia.png"
-              alt="Videoconferencia ilustrada"
+              alt="Video conferencia"
             />
           </div>
         </div>
@@ -112,9 +134,31 @@ const Home: React.FC = () => {
           <article className="home__feature-card">
             <h3>Navegación clara</h3>
             <p>
-              Usa un menú fijo y un mapa del sitio que te muestran siempre dónde
-              estás y a qué sección puedes ir.
+              Un menú simple y un mapa del sitio ayudan a entender en qué parte
+              de la plataforma estás.
             </p>
+
+            <ul className="home__feature-list">
+              <li><a href="/">Inicio</a></li>
+              <li><a href="/about">Sobre nosotros</a></li>
+
+              {isAuthenticated ? (
+                <>
+                  <li><a href="/edit-profile">Editar perfil</a></li>
+                  <li><a href="/create">Crear reunión</a></li>
+                  <li>
+                    <a href="#" onClick={(e) => { e.preventDefault(); setShowJoinForm(true); }}>
+                      Unirse a una reunión
+                    </a>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li><a href="/login">Iniciar sesión</a></li>
+                  <li><a href="/register">Registro</a></li>
+                </>
+              )}
+            </ul>
           </article>
 
           <article className="home__feature-card">
