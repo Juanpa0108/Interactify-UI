@@ -1,4 +1,36 @@
 type PeerId = string;
+type VideoPreset = 'low' | 'medium' | 'high';
+
+const TURN_URL = import.meta.env.VITE_TURN_URL as string | undefined;
+const TURN_USERNAME = import.meta.env.VITE_TURN_USERNAME as string | undefined;
+const TURN_CREDENTIAL = import.meta.env.VITE_TURN_CREDENTIAL as string | undefined;
+const RAW_EXTRA_ICE = import.meta.env.VITE_ICE_SERVERS as string | undefined;
+const DEFAULT_VIDEO_BITRATE = Number(import.meta.env.VITE_RTC_MAX_VIDEO_BITRATE ?? 1500) * 1000; // bps
+const ICE_RESTART_DELAY = Number(import.meta.env.VITE_RTC_ICE_RESTART_DELAY ?? 2500);
+
+function parseExtraIce(): RTCIceServer[] {
+  if (!RAW_EXTRA_ICE) return [];
+  try {
+    const parsed = JSON.parse(RAW_EXTRA_ICE);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('[RTC] Could not parse VITE_ICE_SERVERS:', err);
+    return [];
+  }
+}
+
+function buildIceServers(): RTCIceServer[] {
+  const servers: RTCIceServer[] = [
+    { urls: ['stun:stun.l.google.com:19302', 'stun:global.stun.twilio.com:3478'] },
+    ...parseExtraIce()
+  ];
+
+  if (TURN_URL && TURN_USERNAME && TURN_CREDENTIAL) {
+    servers.push({ urls: [TURN_URL], username: TURN_USERNAME, credential: TURN_CREDENTIAL });
+  }
+
+  return servers;
+}
 
 export type RtcEvents = {
   onParticipantJoined?: (id: PeerId) => void;
@@ -15,6 +47,11 @@ class WebRTCManager {
   private makingOffer: Map<PeerId, boolean> = new Map();
   private ignoreOffer: Map<PeerId, boolean> = new Map();
   private isSettingRemoteAnswerPending: Map<PeerId, boolean> = new Map();
+  private restartTimers: Map<PeerId, number> = new Map();
+  private iceServers: RTCIceServer[] = buildIceServers();
+  private preferredPreset: VideoPreset = 'high';
+  private preferredVideoBitrate = DEFAULT_VIDEO_BITRATE;
+  private iceRestartDelay = ICE_RESTART_DELAY;
 
   constructor(socket: any, meetingId: string, events: RtcEvents = {}) {
     this.socket = socket;
@@ -44,12 +81,25 @@ class WebRTCManager {
       console.warn('[RTC] Could not enumerate devices:', err);
     }
 
+    const audioConstraints: MediaTrackConstraints = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    };
+    const videoConstraints: MediaTrackConstraints | boolean = hasVideoInput
+      ? {
+          width: { ideal: this.preferredPreset === 'high' ? 1280 : 960, max: 1920 },
+          height: { ideal: this.preferredPreset === 'high' ? 720 : 540, max: 1080 },
+          frameRate: { ideal: this.preferredPreset === 'low' ? 15 : 30, max: 30 }
+        }
+      : false;
+
     // Request audio + video (if available)
     try {
-      console.log('[RTC] Requesting getUserMedia with:', { audio: true, video: hasVideoInput });
+      console.log('[RTC] Requesting getUserMedia with:', { audio: audioConstraints, video: videoConstraints });
       this.localStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
-        video: hasVideoInput 
+        audio: audioConstraints, 
+        video: videoConstraints 
       });
       console.log('[RTC] Got local stream:', {
         audioTracks: this.localStream.getAudioTracks().length,
@@ -60,7 +110,7 @@ class WebRTCManager {
       console.warn('[RTC] Could not get video, falling back to audio only:', err);
       // Fallback to audio only if video fails
       this.localStream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true, 
+        audio: audioConstraints, 
         video: false 
       });
       console.log('[RTC] Fallback stream (audio only):', {
@@ -122,6 +172,7 @@ class WebRTCManager {
               pc.addTrack(videoTrack, this.localStream);
               console.log('[RTC] Added new video track for peer', remoteId);
             }
+            this.applyPreferredBitrate(pc);
           }
         }
       } catch (err) {
@@ -144,6 +195,7 @@ class WebRTCManager {
           if (videoSender && videoSender.track) {
             console.log('[RTC] Re-confirming video sender for peer', remoteId);
             await videoSender.replaceTrack(videoTracks[0]);
+            this.applyPreferredBitrate(pc);
           }
         }
       }
@@ -152,6 +204,73 @@ class WebRTCManager {
 
   getLocalStream(): MediaStream | null {
     return this.localStream;
+  }
+
+  setVideoQuality(preset: VideoPreset) {
+    this.preferredPreset = preset;
+    const bitrateMap: Record<VideoPreset, number> = {
+      low: 450_000,
+      medium: 900_000,
+      high: DEFAULT_VIDEO_BITRATE,
+    };
+    this.preferredVideoBitrate = bitrateMap[preset] ?? DEFAULT_VIDEO_BITRATE;
+    console.log('[RTC] Applying video quality preset:', preset, 'max bitrate:', this.preferredVideoBitrate);
+    for (const [, pc] of this.peers) {
+      this.applyPreferredBitrate(pc);
+    }
+  }
+
+  private applyPreferredBitrate(pc: RTCPeerConnection) {
+    const senders = pc.getSenders().filter(sender => sender.track?.kind === 'video');
+    for (const sender of senders) {
+      try {
+        const params = sender.getParameters();
+        if (!params.encodings || params.encodings.length === 0) {
+          params.encodings = [{}];
+        }
+        const encoding = params.encodings[0];
+        encoding.maxBitrate = this.preferredVideoBitrate;
+        encoding.maxFramerate = this.preferredPreset === 'low' ? 15 : 30;
+        sender.setParameters(params).catch(err => {
+          console.warn('[RTC] Could not update sender parameters:', err);
+        });
+      } catch (err) {
+        console.warn('[RTC] Failed to apply bitrate settings:', err);
+      }
+    }
+  }
+
+  private scheduleIceRestart(remoteId: PeerId) {
+    if (this.restartTimers.has(remoteId)) return;
+    const timer = window.setTimeout(() => {
+      this.restartTimers.delete(remoteId);
+      void this.restartIce(remoteId);
+    }, this.iceRestartDelay);
+    this.restartTimers.set(remoteId, timer);
+  }
+
+  private clearIceRestart(remoteId: PeerId) {
+    const timer = this.restartTimers.get(remoteId);
+    if (timer) {
+      clearTimeout(timer);
+      this.restartTimers.delete(remoteId);
+    }
+  }
+
+  private async restartIce(remoteId: PeerId) {
+    const pc = this.peers.get(remoteId);
+    if (!pc) return;
+    try {
+      console.log('[RTC] Restarting ICE with peer', remoteId);
+      this.makingOffer.set(remoteId, true);
+      const offer = await pc.createOffer({ iceRestart: true });
+      await pc.setLocalDescription(offer);
+      this.socket.emit('rtc:offer', { room: this.meetingId, to: remoteId, offer });
+    } catch (err) {
+      console.error('[RTC] ICE restart failed for', remoteId, err);
+    } finally {
+      this.makingOffer.set(remoteId, false);
+    }
   }
 
   private createPeer(remoteId: PeerId) {
@@ -180,6 +299,7 @@ class WebRTCManager {
         const sender = pc.addTrack(track, this.localStream!);
         console.log('[RTC] Added track:', track.kind, 'id:', track.id, 'enabled:', track.enabled, 'sender:', !!sender);
       });
+      this.applyPreferredBitrate(pc);
     }
 
     pc.onicecandidate = (ev) => {
@@ -212,6 +332,17 @@ class WebRTCManager {
       }
     };
 
+    pc.oniceconnectionstatechange = () => {
+      const state = pc.iceConnectionState;
+      console.log('[RTC] ICE connection state ->', remoteId, state);
+      if (state === 'failed' || state === 'disconnected') {
+        this.scheduleIceRestart(remoteId);
+      }
+      if (state === 'connected' || state === 'completed') {
+        this.clearIceRestart(remoteId);
+      }
+    };
+
     // negotiationneeded -> send offer politely
     pc.onnegotiationneeded = async () => {
       try {
@@ -230,8 +361,13 @@ class WebRTCManager {
     };
 
     pc.onconnectionstatechange = () => {
+      console.log('[RTC] Connection state ->', remoteId, pc.connectionState);
+      if (pc.connectionState === 'failed') {
+        this.scheduleIceRestart(remoteId);
+      }
       if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         this.peers.delete(remoteId);
+        this.clearIceRestart(remoteId);
       }
     };
 

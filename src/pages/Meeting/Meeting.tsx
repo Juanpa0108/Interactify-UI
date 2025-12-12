@@ -20,7 +20,6 @@ const Meeting: React.FC = () => {
   const [copied, setCopied] = useState<'none'|'link'|'code'>('none');
   const [copyError, setCopyError] = useState<string | null>(null);
 
-  const [participants, setParticipants] = useState<string[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<{ socketId: string; userId: string }[]>([]);
   const [profileName, setProfileName] = useState<string>('');
   const [showAll, setShowAll] = useState(false);
@@ -44,6 +43,12 @@ const Meeting: React.FC = () => {
   const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array<ArrayBuffer> }>>({});
   const animationFrameRef = React.useRef<number | null>(null);
   const participantsDialogRef = React.useRef<HTMLDivElement | null>(null);
+  const remoteStreamEntries = React.useMemo(() => Object.entries(remoteStreams), [remoteStreams]);
+
+  const getParticipantLabel = (socketId: string) => {
+    const match = onlineUsers.find(u => u.socketId === socketId);
+    return match?.userId || socketId;
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -117,7 +122,6 @@ const Meeting: React.FC = () => {
         console.log('[Meeting] usersOnline updated:', arr.map(u => ({ socketId: u.socketId, userId: u.userId })));
         if (mounted) {
           setOnlineUsers(arr);
-          setParticipants(arr.map(u => u.userId || u.socketId).slice(0,10));
         }
       });
 
@@ -507,28 +511,18 @@ const Meeting: React.FC = () => {
               </div>
             </div>
 
-            {/* Render only connected users with active audio streams */}
-            {(() => {
-              const availablePeerIds = Object.keys(remoteStreams);
-              const onlineSocketIds = onlineUsers.map(u => u.socketId);
-              console.log('[Meeting] Render check:', {
-                availablePeerIds,
-                onlineSocketIds,
-                remoteStreamsCount: Object.keys(remoteStreams).length,
-                onlineUsersCount: onlineUsers.length
-              });
-              return null;
-            })()}
-            {onlineUsers.filter(u => remoteStreams[u.socketId]).slice(0,3).map(({ socketId, userId }) => {
-              const stream = remoteStreams[socketId];
-              const hasVideo = stream && stream.getVideoTracks().length > 0;
-              
-              console.log('[Meeting] Rendering remote user:', userId || socketId, {
+            {/* Render remote participants based on actual WebRTC streams */}
+            {remoteStreamEntries.slice(0, 3).map(([socketId, stream]) => {
+              const hasVideo = stream?.getVideoTracks().length > 0;
+              const label = getParticipantLabel(socketId);
+
+              console.log('[Meeting] Rendering remote participant:', label, {
                 hasVideo,
                 videoTracks: stream?.getVideoTracks().length,
-                videoEnabled: stream?.getVideoTracks()[0]?.enabled
+                videoEnabled: stream?.getVideoTracks()[0]?.enabled,
+                audioTracks: stream?.getAudioTracks().length
               });
-              
+
               return (
                 <div key={socketId} className="meeting__video-tile">
                   <div className="meeting__video-simulated">
@@ -539,19 +533,19 @@ const Meeting: React.FC = () => {
                         className="meeting__video-element"
                         ref={node => {
                           if (node && stream) {
-                            try { 
+                            try {
                               node.srcObject = stream;
-                              console.log('[Meeting] Video element attached for:', userId || socketId);
+                              console.log('[Meeting] Video element attached for:', label);
                             } catch (err) {
-                              console.error('[Meeting] Error attaching stream:', err);
+                              console.error('[Meeting] Error attaching stream for', label, err);
                             }
                           }
                         }}
                       />
                     ) : (
-                      <div className="meeting__avatar">{(userId || socketId).slice(0,2).toUpperCase()}</div>
+                      <div className="meeting__avatar">{label.slice(0, 2).toUpperCase()}</div>
                     )}
-                    <span className="meeting__video-label">{userId || socketId}</span>
+                    <span className="meeting__video-label">{label}</span>
                     {speakingPeers[socketId] && <div className="meeting__speaking-pulse" aria-hidden="true" />}
                   </div>
                 </div>
@@ -559,10 +553,10 @@ const Meeting: React.FC = () => {
             })}
 
             {/* If there are more participants, show a small pill/button */}
-            {onlineUsers.filter(u => remoteStreams[u.socketId]).length > 3 && (
+            {remoteStreamEntries.length > 3 && (
               <div style={{ display: 'flex', alignItems: 'center', marginLeft: 12 }}>
                 <button className="btn btn--ghost" onClick={() => setShowAll(true)}>
-                  Ver más participantes ({Math.min(onlineUsers.filter(u => remoteStreams[u.socketId]).length, 10)})
+                  Ver más participantes ({Math.min(remoteStreamEntries.length, 10)})
                 </button>
               </div>
             )}
@@ -580,12 +574,12 @@ const Meeting: React.FC = () => {
             >
               <div className="participants-modal-inner">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 id="participants-title">Participantes ({Math.min(participants.length, 10)})</h3>
+                  <h3 id="participants-title">Participantes ({Math.min(remoteStreamEntries.length, 10)})</h3>
                   <button className="btn" onClick={() => setShowAll(false)}>Cerrar</button>
                 </div>
                 <ul className="participants-list">
-                  {onlineUsers.filter(u => remoteStreams[u.socketId]).slice(0, 10).map((u, i) => (
-                    <li key={u.socketId + i} className="participant-item">{u.userId || u.socketId}</li>
+                  {remoteStreamEntries.slice(0, 10).map(([socketId]) => (
+                    <li key={socketId} className="participant-item">{getParticipantLabel(socketId)}</li>
                   ))}
                 </ul>
               </div>
