@@ -276,10 +276,10 @@ class WebRTCManager {
   private createPeer(remoteId: PeerId) {
     if (this.peers.has(remoteId)) return this.peers.get(remoteId)!;
 
+    const iceServers = this.iceServers.length ? this.iceServers : [{ urls: 'stun:stun.l.google.com:19302' }];
+
     const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' }
-      ]
+      iceServers
     });
 
     // ensure transceivers exist for predictable negotiation
