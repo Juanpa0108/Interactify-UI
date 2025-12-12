@@ -111,6 +111,7 @@ const Meeting: React.FC = () => {
 
       socket.on('usersOnline', (users: any[]) => {
         const arr = (users || []).map((u: any) => ({ socketId: String(u?.socketId || ''), userId: String(u?.userId || '') }));
+        console.log('[Meeting] usersOnline updated:', arr.map(u => ({ socketId: u.socketId, userId: u.userId })));
         if (mounted) {
           setOnlineUsers(arr);
           setParticipants(arr.map(u => u.userId || u.socketId).slice(0,10));
@@ -135,6 +136,11 @@ const Meeting: React.FC = () => {
       // WebRTC setup
       const rtc = new WebRTCManager(socket, id || '', {
         onStream: (pid, stream) => {
+          console.log('[Meeting] Remote stream received from peer:', pid, {
+            videoTracks: stream.getVideoTracks().length,
+            audioTracks: stream.getAudioTracks().length,
+            videoEnabled: stream.getVideoTracks()[0]?.enabled
+          });
           setRemoteAudios(prev => ({ ...prev, [pid]: stream }));
           setRemoteStreams(prev => ({ ...prev, [pid]: stream }));
           // setup analyser per remote stream
@@ -146,6 +152,20 @@ const Meeting: React.FC = () => {
           src.connect(analyser);
           const data = new Uint8Array(analyser.frequencyBinCount);
           peerAnalysersRef.current[pid] = { analyser, data };
+        },
+        onParticipantLeft: (pid) => {
+          console.log('[Meeting] Participant left:', pid);
+          setRemoteAudios(prev => {
+            const updated = { ...prev };
+            delete updated[pid];
+            return updated;
+          });
+          setRemoteStreams(prev => {
+            const updated = { ...prev };
+            delete updated[pid];
+            return updated;
+          });
+          delete peerAnalysersRef.current[pid];
         }
       });
       rtcRef.current = rtc;
@@ -439,9 +459,26 @@ animationFrameRef.current = requestAnimationFrame(tick);
             </div>
 
             {/* Render only connected users with active audio streams */}
+            {(() => {
+              const availablePeerIds = Object.keys(remoteStreams);
+              const onlineSocketIds = onlineUsers.map(u => u.socketId);
+              console.log('[Meeting] Render check:', {
+                availablePeerIds,
+                onlineSocketIds,
+                remoteStreamsCount: Object.keys(remoteStreams).length,
+                onlineUsersCount: onlineUsers.length
+              });
+              return null;
+            })()}
             {onlineUsers.filter(u => remoteStreams[u.socketId]).slice(0,3).map(({ socketId, userId }) => {
               const stream = remoteStreams[socketId];
-              const hasVideo = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].enabled;
+              const hasVideo = stream && stream.getVideoTracks().length > 0;
+              
+              console.log('[Meeting] Rendering remote user:', userId || socketId, {
+                hasVideo,
+                videoTracks: stream?.getVideoTracks().length,
+                videoEnabled: stream?.getVideoTracks()[0]?.enabled
+              });
               
               return (
                 <div key={socketId} className="meeting__video-tile">
@@ -453,7 +490,12 @@ animationFrameRef.current = requestAnimationFrame(tick);
                         className="meeting__video-element"
                         ref={node => {
                           if (node && stream) {
-                            try { node.srcObject = stream; } catch {}
+                            try { 
+                              node.srcObject = stream;
+                              console.log('[Meeting] Video element attached for:', userId || socketId);
+                            } catch (err) {
+                              console.error('[Meeting] Error attaching stream:', err);
+                            }
                           }
                         }}
                       />
