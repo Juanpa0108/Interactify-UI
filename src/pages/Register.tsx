@@ -46,6 +46,7 @@ const Register: React.FC = () => {
     const ok = Object.values(requirements).every(Boolean);
     
     if (!ok) {
+      setError('Revisa los campos resaltados y completa todos los requisitos.');
       return;
     }
 
@@ -215,7 +216,11 @@ const Register: React.FC = () => {
             </p>
 
             {error && (
-              <div className="register-error">
+              <div
+                className="register-error"
+                role="alert"
+                aria-live="assertive"
+              >
                 <span className="register-error-icon">⚠️</span>
                 {error}
               </div>
@@ -261,6 +266,8 @@ const Register: React.FC = () => {
                     onChange={(e) => setAge(e.target.value)}
                     min={MIN_AGE}
                     className="register-input"
+                    aria-invalid={!requirements.ageOk}
+                    aria-describedby="register-reqs"
                     required
                   />
                 </div>
@@ -289,6 +296,8 @@ const Register: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="register-input"
+                    aria-invalid={!requirements.pwdLength || !requirements.pwdMatch}
+                    aria-describedby="register-reqs"
                     required
                   />
                   <button
@@ -312,6 +321,8 @@ const Register: React.FC = () => {
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     className="register-input"
+                    aria-invalid={!requirements.pwdMatch}
+                    aria-describedby="register-reqs"
                     required
                   />
                   <button
@@ -326,7 +337,7 @@ const Register: React.FC = () => {
               </div>
 
               {/* Password strength indicator */}
-              <div className="register-requirements">
+              <div className="register-requirements" id="register-reqs">
                 <div className="register-progress-bar">
                   <div 
                     className="register-progress-fill"

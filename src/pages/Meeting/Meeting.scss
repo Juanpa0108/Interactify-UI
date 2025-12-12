@@ -102,6 +102,12 @@
     border: 1px solid rgba(16, 185, 129, 0.3);
   }
 
+  .copy-toast--error {
+    color: #fecaca;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+
   &__header-actions {
     display: flex;
     align-items: flex-start;

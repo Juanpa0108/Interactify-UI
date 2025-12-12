@@ -186,12 +186,7 @@ const CreateMeeting: React.FC = () => {
                 <button
                   className="create-btn create-btn--copy"
                   type="button"
-                  onClick={() =>
-                    handleCopy(
-                      createdMeetingId,
-                      "code"
-                    )
-                  }
+                  onClick={() => handleCopy(createdMeetingId, "code")}
                   title="Copiar código"
                 >
                   📋
@@ -228,7 +223,8 @@ const CreateMeeting: React.FC = () => {
               className="create-btn create-btn--primary"
               type="button"
               disabled={!createdMeetingId}
-              onClick={() => createdMeetingId &&
+              onClick={() =>
+                createdMeetingId &&
                 navigate(`/meeting/${createdMeetingId}`, { replace: true })
               }
             >
@@ -236,12 +232,20 @@ const CreateMeeting: React.FC = () => {
             </button>
 
             {showCopiedLink && (
-              <div className="create-toast">
+              <div
+                className="create-toast"
+                role="status"
+                aria-live="polite"
+              >
                 ✓ Enlace copiado
               </div>
             )}
             {showCopiedCode && (
-              <div className="create-toast">
+              <div
+                className="create-toast"
+                role="status"
+                aria-live="polite"
+              >
                 ✓ Código copiado
               </div>
             )}
