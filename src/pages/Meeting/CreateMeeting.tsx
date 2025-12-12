@@ -189,7 +189,7 @@ const CreateMeeting: React.FC = () => {
                   onClick={() =>
                     handleCopy(
                       createdMeetingId,
-                      "✓ Código copiado"
+                      "code"
                     )
                   }
                   title="Copiar código"
@@ -215,9 +215,7 @@ const CreateMeeting: React.FC = () => {
                 <button
                   className="create-btn create-btn--copy"
                   type="button"
-                  onClick={() =>
-                    handleCopy(inviteUrl, "✓ Enlace copiado")
-                  }
+                  onClick={() => handleCopy(inviteUrl, "link")}
                   title="Copiar enlace"
                 >
                   📋
