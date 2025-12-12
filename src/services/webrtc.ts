@@ -129,6 +129,12 @@ class WebRTCManager {
 
     pc.ontrack = (ev) => {
       const stream = ev.streams[0];
+      console.log('[RTC] ontrack event for peer:', remoteId, {
+        stream: !!stream,
+        tracks: stream?.getTracks().length,
+        videoTracks: stream?.getVideoTracks().length,
+        audioTracks: stream?.getAudioTracks().length
+      });
       if (stream && this.events.onStream) this.events.onStream(remoteId, stream);
     };
 
@@ -157,6 +163,7 @@ class WebRTCManager {
 
   private handleSocket() {
     this.socket.on('rtc:joined', async ({ from }: { from: PeerId }) => {
+      console.log('[RTC] rtc:joined event, peer ID:', from);
       if (!this.localStream) await this.initLocalMedia();
       const pc = this.createPeer(from);
       // letting onnegotiationneeded drive offers avoids wrong-state errors
@@ -218,6 +225,7 @@ class WebRTCManager {
     });
 
     this.socket.on('rtc:left', ({ from }: { from: PeerId }) => {
+      console.log('[RTC] rtc:left event, peer ID:', from);
       const pc = this.peers.get(from);
       if (pc) pc.close();
       this.peers.delete(from);
