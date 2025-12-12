@@ -80,22 +80,41 @@ const Chat: React.FC<Props> = ({ initialName }) => {
   return (
     <div className="chat-page">
       <div className="chat-header">
-        <h2>Chat</h2>
-        <div className={`status ${connected ? 'online' : 'offline'}`}>{connected ? 'Connected' : 'Disconnected'}</div>
+        <h2 id="chat-heading">Chat</h2>
+        <div
+          className={`status ${connected ? 'online' : 'offline'}`}
+          role="status"
+          aria-live="polite"
+        >
+          {connected ? 'Conectado' : 'Desconectado'}
+        </div>
       </div>
 
       <div className="chat-controls">
+        <label htmlFor="chat-name" className="visually-hidden">
+          Nombre para mostrar
+        </label>
         <input
-          placeholder="Your display name"
+          id="chat-name"
+          placeholder="Tu nombre visible en el chat"
           value={name}
           onChange={e => setName(e.target.value)}
           disabled={!!initialName}
           title={initialName ? 'El nombre proviene de tu perfil y no es editable' : undefined}
+          aria-describedby="chat-name-help"
         />
-        <div className="online-count">Online: {online.length}</div>
+        <div id="chat-name-help" className="visually-hidden">
+          Este nombre se mostrará a otros usuarios en el chat.
+        </div>
+        <div className="online-count">En línea: {online.length}</div>
       </div>
 
-      <div className="chat-window">
+      <div
+        className="chat-window"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+      >
         {messages.map((m, i) => (
           <div key={i} className={`chat-message ${m.userId === name ? 'mine' : ''}`}>
             <div className="meta">
@@ -108,8 +127,17 @@ const Chat: React.FC<Props> = ({ initialName }) => {
       </div>
 
       <div className="chat-input">
-        <input placeholder="Write a message..." value={text} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }} />
-        <button onClick={sendMessage}>Send</button>
+        <label htmlFor="chat-message" className="visually-hidden">
+          Mensaje
+        </label>
+        <input
+          id="chat-message"
+          placeholder="Escribe un mensaje..."
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') sendMessage(); }}
+        />
+        <button onClick={sendMessage}>Enviar</button>
       </div>
     </div>
   );

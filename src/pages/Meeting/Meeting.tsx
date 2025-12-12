@@ -18,11 +18,13 @@ const Meeting: React.FC = () => {
 
   const meetingUrl = window.location.href;
   const [copied, setCopied] = useState<'none'|'link'|'code'>('none');
+  const [copyError, setCopyError] = useState<string | null>(null);
 
   const [participants, setParticipants] = useState<string[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<{ socketId: string; userId: string }[]>([]);
   const [profileName, setProfileName] = useState<string>('');
   const [showAll, setShowAll] = useState(false);
+
   const [micOn, setMicOn] = useState(true);
   const [videoOn, setVideoOn] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -41,6 +43,7 @@ const Meeting: React.FC = () => {
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array<ArrayBuffer> }>>({});
   const animationFrameRef = React.useRef<number | null>(null);
+  const participantsDialogRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -260,6 +263,23 @@ const Meeting: React.FC = () => {
     void init();
   }, []);
 
+  // Accesibilidad para el modal de participantes: enfocar al abrir y permitir cerrar con Escape
+  useEffect(() => {
+    if (!showAll) return;
+
+    participantsDialogRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowAll(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAll]);
+
   // Sync localStream with video element
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -351,7 +371,6 @@ const Meeting: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showShortcutsGuide, micOn, showChat]);
 
-
   const handleLeaveMeeting = () => {
     // Aquí puedes limpiar estado adicional si lo necesitan (cerrar sockets, etc.)
     navigate("/", { replace: true });
@@ -405,8 +424,12 @@ const Meeting: React.FC = () => {
                 try {
                   await navigator.clipboard.writeText(String(id || ''));
                   setCopied('code');
+                  setCopyError(null);
                   setTimeout(() => setCopied('none'), 1600);
-                } catch (err) { console.error('Failed to copy code:', err); }
+                } catch (err) {
+                  console.error('Failed to copy code:', err);
+                  setCopyError('No se pudo copiar el código. Selecciona el texto y usa Ctrl+C.');
+                }
               }}
             >Copiar código</button>
             <button
@@ -416,12 +439,27 @@ const Meeting: React.FC = () => {
                 try {
                   await navigator.clipboard.writeText(meetingUrl);
                   setCopied('link');
+                  setCopyError(null);
                   setTimeout(() => setCopied('none'), 1600);
-                } catch (err) { console.error('Failed to copy link:', err); }
+                } catch (err) {
+                  console.error('Failed to copy link:', err);
+                  setCopyError('No se pudo copiar el enlace. Selecciona el texto y usa Ctrl+C.');
+                }
               }}
             >Copiar enlace</button>
             {copied !== 'none' && (
-              <span className="copy-toast">¡Copiado!</span>
+              <span
+                className="copy-toast"
+                role="status"
+                aria-live="polite"
+              >
+                ¡Copiado!
+              </span>
+            )}
+            {copyError && (
+              <span className="copy-toast copy-toast--error" role="alert">
+                {copyError}
+              </span>
             )}
           </div>
         </div>
@@ -531,10 +569,17 @@ const Meeting: React.FC = () => {
 
           {/* Modal / panel showing up to 10 participants */}
           {showAll && (
-            <div className="participants-modal" role="dialog" aria-modal="true">
+            <div
+              className="participants-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="participants-title"
+              ref={participantsDialogRef}
+              tabIndex={-1}
+            >
               <div className="participants-modal-inner">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3>Participantes ({Math.min(participants.length, 10)})</h3>
+                  <h3 id="participants-title">Participantes ({Math.min(participants.length, 10)})</h3>
                   <button className="btn" onClick={() => setShowAll(false)}>Cerrar</button>
                 </div>
                 <ul className="participants-list">
@@ -555,6 +600,7 @@ const Meeting: React.FC = () => {
                 onClick={handleToggleMic}
                 aria-label={micOn ? 'Apagar micrófono' : 'Encender micrófono'}
                 title={micOn ? 'Apagar micrófono' : 'Encender micrófono'}
+                aria-pressed={micOn}
               >
                 {micOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
               </button>
@@ -567,6 +613,7 @@ const Meeting: React.FC = () => {
                 }}
                 aria-label={videoOn ? 'Apagar cámara' : 'Encender cámara'}
                 title={videoOn ? 'Apagar cámara' : 'Encender cámara'}
+                aria-pressed={videoOn}
               >
                 <FaVideo />
               </button>
@@ -577,6 +624,7 @@ const Meeting: React.FC = () => {
                 onClick={() => setShowChat(v => !v)}
                 aria-label={showChat ? 'Ocultar chat' : 'Mostrar chat'}
                 title={showChat ? 'Ocultar chat' : 'Mostrar chat'}
+                aria-pressed={showChat}
               >
                 <FaComments />
               </button>
