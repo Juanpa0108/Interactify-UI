@@ -8,9 +8,8 @@
   width: 100%;
   position: relative;
 
-  // Línea decorativa superior
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 50%;
@@ -21,8 +20,9 @@
   }
 
   &__container {
-    padding-top: 3rem;
-    padding-bottom: 1.5rem;
+    max-width: $max-width;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 1.5rem;
   }
 
   &__top {
@@ -89,7 +89,7 @@
     padding-left: 0;
 
     &::before {
-      content: '→';
+      content: "→";
       position: absolute;
       left: -1.25rem;
       opacity: 0;
@@ -101,7 +101,7 @@
     &:focus-visible {
       color: #ffffff;
       padding-left: 1.25rem;
-      
+
       &::before {
         opacity: 1;
         left: 0;
@@ -129,7 +129,7 @@
     margin-top: 3rem;
 
     &__container {
-      padding-top: 2rem;
+      padding: 2rem 1rem 1.25rem;
     }
 
     &__top {

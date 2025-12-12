@@ -20,17 +20,27 @@ const Navbar: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // Prevenir scroll cuando el menú móvil está abierto
+  // Prevenir scroll cuando el menú móvil está abierto + cerrar con Escape
   useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsMobileMenuOpen(false);
+    };
+
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", onKeyDown);
     } else {
       document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKeyDown);
     }
+
     return () => {
       document.body.style.overflow = "unset";
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [isMobileMenuOpen]);
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const handleLogout = async () => {
     try {
@@ -47,7 +57,7 @@ const Navbar: React.FC = () => {
   };
 
   const handleJoinMeeting = () => {
-    setIsMobileMenuOpen(false);
+    closeMobileMenu();
     const code = window.prompt("Ingresa el código de la reunión:");
     if (!code) return;
 
@@ -57,31 +67,32 @@ const Navbar: React.FC = () => {
     navigate(`/meeting/${trimmed}`);
   };
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   return (
     <header className="navbar">
-      <div className="navbar__inner app-content">
+      <div className="navbar__inner">
         <Link to="/" className="navbar__logo" onClick={closeMobileMenu}>
           <span className="navbar__brand">Interactify</span>
         </Link>
 
         {/* Botón hamburguesa */}
         <button
-          className={`navbar__hamburger ${isMobileMenuOpen ? "navbar__hamburger--open" : ""}`}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Toggle menu"
+          className={`navbar__hamburger ${
+            isMobileMenuOpen ? "navbar__hamburger--open" : ""
+          }`}
+          type="button"
+          onClick={() => setIsMobileMenuOpen((v) => !v)}
+          aria-label="Abrir/cerrar menú"
           aria-expanded={isMobileMenuOpen}
+          aria-controls="primary-navigation"
         >
-          <span></span>
-          <span></span>
-          <span></span>
+          <span />
+          <span />
+          <span />
         </button>
 
         {/* Navegación desktop y móvil */}
         <nav
+          id="primary-navigation"
           className={`navbar__nav ${isMobileMenuOpen ? "navbar__nav--open" : ""}`}
           aria-label="Navegación principal"
         >
@@ -125,6 +136,7 @@ const Navbar: React.FC = () => {
               >
                 Crear reunión
               </NavLink>
+
               <NavLink
                 to="/edit-profile"
                 className={({ isActive }) =>
@@ -134,6 +146,7 @@ const Navbar: React.FC = () => {
               >
                 Perfil
               </NavLink>
+
               <button
                 type="button"
                 onClick={handleLogout}
@@ -153,6 +166,7 @@ const Navbar: React.FC = () => {
               >
                 Iniciar sesión
               </NavLink>
+
               <NavLink
                 to="/register"
                 className={({ isActive }) =>
@@ -166,7 +180,7 @@ const Navbar: React.FC = () => {
           )}
         </nav>
 
-        {/* Overlay para cerrar el menú al hacer clic fuera */}
+        {/* Overlay */}
         {isMobileMenuOpen && (
           <div
             className="navbar__overlay"

@@ -51,6 +51,7 @@ const Home: React.FC = () => {
               <>
                 <button
                   className="btn btn--primary"
+                  type="button"
                   onClick={() => navigate("/create")}
                 >
                   Crear reunión
@@ -60,6 +61,8 @@ const Home: React.FC = () => {
                   className="btn btn--ghost"
                   type="button"
                   onClick={() => setShowJoinForm((prev) => !prev)}
+                  aria-expanded={showJoinForm}
+                  aria-controls="join-form"
                 >
                   Unirse a una reunión
                 </button>
@@ -68,6 +71,7 @@ const Home: React.FC = () => {
               <>
                 <button
                   className="btn btn--primary"
+                  type="button"
                   onClick={() => navigate("/login")}
                 >
                   Comenzar ahora
@@ -75,6 +79,7 @@ const Home: React.FC = () => {
 
                 <button
                   className="btn btn--ghost"
+                  type="button"
                   onClick={handleScrollToFeatures}
                 >
                   Ver funcionalidades
@@ -86,6 +91,7 @@ const Home: React.FC = () => {
           {/* FORMULARIO DE UNIRSE */}
           {isAuthenticated && showJoinForm && (
             <form
+              id="join-form"
               className="home__join-form"
               onSubmit={handleJoinSubmit}
               aria-label="Unirse a una reunión mediante código"
@@ -98,6 +104,8 @@ const Home: React.FC = () => {
                   onChange={(e) => setJoinCode(e.target.value)}
                   placeholder="Ej: 2f9c8a1b..."
                   aria-label="Código de reunión"
+                  autoComplete="off"
+                  inputMode="text"
                 />
               </label>
 
@@ -110,16 +118,13 @@ const Home: React.FC = () => {
 
         <div className="home__hero-illustration">
           <div className="home__mockup">
-            <img
-              src="/video-conferencia.png"
-              alt="Video conferencia"
-            />
+            <img src="/video-conferencia.png" alt="Video conferencia" />
           </div>
         </div>
       </section>
 
       {/* FEATURES */}
-       <section id="features" className="home__features">
+      <section id="features" className="home__features">
         <h2>Funcionalidades</h2>
 
         <div className="home__features-grid">
@@ -139,23 +144,46 @@ const Home: React.FC = () => {
             </p>
 
             <ul className="home__feature-list">
-              <li><a href="/">Inicio</a></li>
-              <li><a href="/about">Sobre nosotros</a></li>
+              <li>
+                <Link to="/">Inicio</Link>
+              </li>
+              <li>
+                <Link to="/about">Sobre nosotros</Link>
+              </li>
 
               {isAuthenticated ? (
                 <>
-                  <li><a href="/edit-profile">Editar perfil</a></li>
-                  <li><a href="/create">Crear reunión</a></li>
                   <li>
-                    <a href="#" onClick={(e) => { e.preventDefault(); setShowJoinForm(true); }}>
+                    <Link to="/edit-profile">Editar perfil</Link>
+                  </li>
+                  <li>
+                    <Link to="/create">Crear reunión</Link>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setShowJoinForm(true)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        color: "inherit",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
                       Unirse a una reunión
-                    </a>
+                    </button>
                   </li>
                 </>
               ) : (
                 <>
-                  <li><a href="/login">Iniciar sesión</a></li>
-                  <li><a href="/register">Registro</a></li>
+                  <li>
+                    <Link to="/login">Iniciar sesión</Link>
+                  </li>
+                  <li>
+                    <Link to="/register">Registro</Link>
+                  </li>
                 </>
               )}
             </ul>

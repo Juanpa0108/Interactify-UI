@@ -19,7 +19,7 @@ const CreateMeeting: React.FC = () => {
   useEffect(() => {
     const storedToken =
       localStorage.getItem("token") || localStorage.getItem("authToken");
-    if (!token) {
+    if (!storedToken) {
       navigate("/login");
       return;
     }
@@ -237,9 +237,14 @@ const CreateMeeting: React.FC = () => {
               Entrar a la reunión →
             </button>
 
-            {copyMessage && (
+            {showCopiedLink && (
               <div className="create-toast">
-                {copyMessage}
+                ✓ Enlace copiado
+              </div>
+            )}
+            {showCopiedCode && (
+              <div className="create-toast">
+                ✓ Código copiado
               </div>
             )}
           </div>
