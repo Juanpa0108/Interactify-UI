@@ -190,8 +190,9 @@ const Meeting: React.FC = () => {
           setVideoOn(hasVideo);
         }
 
-        setConnectionStatus('conectando');
         await rtc.join();
+        setConnectionStatus('conectado');
+        console.log('[Meeting] RTC connection established');
       } catch (err: any) {
         if (err && (err as DOMException).name === 'NotAllowedError') {
           console.warn('[Meeting] User denied media permissions (camera/mic).', err);
