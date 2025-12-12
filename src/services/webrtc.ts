@@ -95,7 +95,59 @@ class WebRTCManager {
 
   async toggleCamera(enabled: boolean) {
     if (!this.localStream) return;
-    this.localStream.getVideoTracks().forEach(t => (t.enabled = enabled));
+    
+    const videoTracks = this.localStream.getVideoTracks();
+    
+    // Si no hay video tracks disponibles y queremos habilitar, necesitamos obtener la cámara
+    if (enabled && videoTracks.length === 0) {
+      console.log('[RTC] No video track exists, requesting camera access');
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ 
+          audio: false, 
+          video: true 
+        });
+        const videoTrack = newStream.getVideoTracks()[0];
+        if (videoTrack) {
+          this.localStream.addTrack(videoTrack);
+          console.log('[RTC] Added new video track to local stream');
+          
+          // Agregar el track a todos los peers existentes
+          for (const [remoteId, pc] of this.peers) {
+            const senders = pc.getSenders();
+            const videoSender = senders.find(s => s.track === null || s.track?.kind === 'video');
+            if (videoSender) {
+              await videoSender.replaceTrack(videoTrack);
+              console.log('[RTC] Replaced video track for peer', remoteId);
+            } else {
+              pc.addTrack(videoTrack, this.localStream);
+              console.log('[RTC] Added new video track for peer', remoteId);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[RTC] Failed to get camera:', err);
+        return;
+      }
+    } else if (videoTracks.length > 0) {
+      // Solo habilitar/deshabilitar el track existente
+      videoTracks.forEach(t => {
+        t.enabled = enabled;
+        console.log('[RTC] Video track', enabled ? 'enabled' : 'disabled');
+      });
+      
+      // Si se está activando, asegurar que los peers lo reciban
+      if (enabled) {
+        console.log('[RTC] Video enabled, ensuring all peers receive it');
+        for (const [remoteId, pc] of this.peers) {
+          const senders = pc.getSenders();
+          const videoSender = senders.find(s => s.track?.kind === 'video');
+          if (videoSender && videoSender.track) {
+            console.log('[RTC] Re-confirming video sender for peer', remoteId);
+            await videoSender.replaceTrack(videoTracks[0]);
+          }
+        }
+      }
+    }
   }
 
   getLocalStream(): MediaStream | null {
@@ -115,9 +167,19 @@ class WebRTCManager {
     pc.addTransceiver('audio', { direction: 'sendrecv' });
     pc.addTransceiver('video', { direction: 'sendrecv' });
 
-    // add local audio
+    // add local tracks (audio + video if available)
     if (this.localStream) {
-      this.localStream.getTracks().forEach(track => pc.addTrack(track, this.localStream!));
+      const tracks = this.localStream.getTracks();
+      console.log('[RTC] Adding local tracks to peer', remoteId, ':', {
+        totalTracks: tracks.length,
+        audio: tracks.filter(t => t.kind === 'audio').length,
+        video: tracks.filter(t => t.kind === 'video').length,
+        videoEnabled: tracks.find(t => t.kind === 'video')?.enabled
+      });
+      tracks.forEach(track => {
+        const sender = pc.addTrack(track, this.localStream!);
+        console.log('[RTC] Added track:', track.kind, 'id:', track.id, 'enabled:', track.enabled, 'sender:', !!sender);
+      });
     }
 
     pc.onicecandidate = (ev) => {
@@ -128,23 +190,39 @@ class WebRTCManager {
     };
 
     pc.ontrack = (ev) => {
-      const stream = ev.streams[0];
       console.log('[RTC] ontrack event for peer:', remoteId, {
-        stream: !!stream,
-        tracks: stream?.getTracks().length,
-        videoTracks: stream?.getVideoTracks().length,
-        audioTracks: stream?.getAudioTracks().length
+        track: ev.track.kind,
+        trackId: ev.track.id,
+        trackEnabled: ev.track.enabled,
+        streams: ev.streams.length
       });
-      if (stream && this.events.onStream) this.events.onStream(remoteId, stream);
+      const stream = ev.streams[0];
+      if (stream) {
+        console.log('[RTC] Stream received from peer:', remoteId, {
+          streamId: stream.id,
+          tracks: stream.getTracks().length,
+          videoTracks: stream.getVideoTracks().length,
+          audioTracks: stream.getAudioTracks().length,
+          videoEnabled: stream.getVideoTracks()[0]?.enabled,
+          audioEnabled: stream.getAudioTracks()[0]?.enabled
+        });
+        if (this.events.onStream) {
+          this.events.onStream(remoteId, stream);
+        }
+      }
     };
 
     // negotiationneeded -> send offer politely
     pc.onnegotiationneeded = async () => {
       try {
         this.makingOffer.set(remoteId, true);
+        console.log('[RTC] Negotiation needed for peer:', remoteId, 'state:', pc.signalingState);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        console.debug('[RTC] Sending offer ->', remoteId);
+        console.log('[RTC] Sending offer ->', remoteId, 'with tracks:', {
+          audio: this.localStream?.getAudioTracks().length || 0,
+          video: this.localStream?.getVideoTracks().length || 0
+        });
         this.socket.emit('rtc:offer', { room: this.meetingId, to: remoteId, offer });
       } catch (err) {
         console.error('[RTC] Error creating offer for', remoteId, ':', err);
