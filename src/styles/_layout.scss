@@ -10,8 +10,21 @@
   flex: 1;
 }
 
+/* Contenedor genérico para páginas */
 .app-content {
   max-width: $max-width;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 3rem; // un poco más de espacio abajo
+}
+
+@media (max-width: 768px) {
+  .app-content {
+    padding: 1.5rem 1rem 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .app-content {
+    padding: 1rem 0.75rem 1.5rem;
+  }
 }

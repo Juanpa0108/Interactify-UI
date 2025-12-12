@@ -6,9 +6,9 @@
   z-index: 50;
   backdrop-filter: blur(10px);
   background: rgba(11, 16, 32, 0.95);
-  
+
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 0;
@@ -18,23 +18,23 @@
   }
 
   &__inner {
+    max-width: $max-width;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 4rem;
+
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 4rem;
+    justify-content: space-between; // clave para alineación estable
+    gap: 1rem;
     position: relative;
   }
 
   &__logo {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     text-decoration: none;
-    transition: transform 0.2s ease;
     z-index: 52;
-    
-    &:hover {
-      transform: scale(1.02);
-    }
   }
 
   &__brand {
@@ -48,7 +48,6 @@
     background-clip: text;
   }
 
-  // Botón hamburguesa
   &__hamburger {
     display: none;
     flex-direction: column;
@@ -60,7 +59,6 @@
     cursor: pointer;
     padding: 0;
     z-index: 52;
-    position: relative;
 
     span {
       display: block;
@@ -76,26 +74,22 @@
       span:nth-child(1) {
         transform: translateY(9px) rotate(45deg);
       }
-
       span:nth-child(2) {
         opacity: 0;
         transform: translateX(-20px);
       }
-
       span:nth-child(3) {
         transform: translateY(-9px) rotate(-45deg);
       }
     }
-
-    &:hover span {
-      background: #ffffff;
-    }
   }
 
   &__nav {
+    margin-left: auto; // empuja el menú a la derecha
     display: flex;
-    gap: 2rem;
     align-items: center;
+    justify-content: flex-end;
+    gap: 1.75rem;
   }
 
   &__link {
@@ -103,17 +97,18 @@
     font-weight: 500;
     color: rgba(255, 255, 255, 0.95);
     text-decoration: none;
+
     padding: 0.5rem 0;
+    line-height: 1; // ayuda a que links/botones queden idénticos en altura
     border-bottom: 2px solid transparent;
-    transition:
-      color 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.2s ease;
+
+    transition: color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
     background: none;
     border-top: none;
     border-left: none;
     border-right: none;
     cursor: pointer;
+
     display: inline-flex;
     align-items: center;
     white-space: nowrap;
@@ -143,13 +138,11 @@
     }
   }
 
-  // Overlay para cerrar el menú
   &__overlay {
     display: none;
   }
 }
 
-// Media queries responsive
 @media (max-width: 968px) {
   .navbar {
     &__hamburger {
@@ -166,8 +159,9 @@
       background: rgba(11, 16, 32, 0.98);
       backdrop-filter: blur(20px);
       flex-direction: column;
-      gap: 0;
       align-items: stretch;
+      justify-content: flex-start;
+      gap: 0;
       padding: 2rem 0;
       transform: translateX(100%);
       transition: transform 0.3s ease;
@@ -186,7 +180,7 @@
       border-bottom: 1px solid rgba(148, 163, 184, 0.1);
       border-left: 3px solid transparent;
       justify-content: flex-start;
-      font-size: 1rem;
+      line-height: 1.2;
 
       &:hover,
       &:focus-visible {
@@ -203,8 +197,6 @@
       }
 
       &--logout {
-        color: #fca5a5;
-        
         &:hover,
         &:focus-visible {
           background: rgba(252, 165, 165, 0.1);
@@ -232,6 +224,7 @@
   .navbar {
     &__inner {
       height: 3.5rem;
+      padding: 0 1rem;
     }
 
     &__brand {
@@ -267,7 +260,6 @@
         span:nth-child(1) {
           transform: translateY(7.5px) rotate(45deg);
         }
-
         span:nth-child(3) {
           transform: translateY(-7.5px) rotate(-45deg);
         }
@@ -286,12 +278,7 @@
   }
 }
 
-// Animación del overlay
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

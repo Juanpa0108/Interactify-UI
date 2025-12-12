@@ -1,5 +1,5 @@
 import "./Home.scss";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { auth } from "../../config/firebase";
 
@@ -39,6 +39,7 @@ const Home: React.FC = () => {
       <section className="home__hero">
         <div className="home__hero-text">
           <h1>Videollamadas simples, claras y en tiempo real.</h1>
+
           <p>
             Interactify es una plataforma web para crear reuniones rápidas,
             conectar equipos de 2 a 10 personas y preparar la base para el chat,
@@ -50,6 +51,7 @@ const Home: React.FC = () => {
               <>
                 <button
                   className="btn btn--primary"
+                  type="button"
                   onClick={() => navigate("/create")}
                 >
                   Crear reunión
@@ -59,6 +61,8 @@ const Home: React.FC = () => {
                   className="btn btn--ghost"
                   type="button"
                   onClick={() => setShowJoinForm((prev) => !prev)}
+                  aria-expanded={showJoinForm}
+                  aria-controls="join-form"
                 >
                   Unirse a una reunión
                 </button>
@@ -67,6 +71,7 @@ const Home: React.FC = () => {
               <>
                 <button
                   className="btn btn--primary"
+                  type="button"
                   onClick={() => navigate("/login")}
                 >
                   Comenzar ahora
@@ -74,6 +79,7 @@ const Home: React.FC = () => {
 
                 <button
                   className="btn btn--ghost"
+                  type="button"
                   onClick={handleScrollToFeatures}
                 >
                   Ver funcionalidades
@@ -85,6 +91,7 @@ const Home: React.FC = () => {
           {/* FORMULARIO DE UNIRSE */}
           {isAuthenticated && showJoinForm && (
             <form
+              id="join-form"
               className="home__join-form"
               onSubmit={handleJoinSubmit}
               aria-label="Unirse a una reunión mediante código"
@@ -97,6 +104,8 @@ const Home: React.FC = () => {
                   onChange={(e) => setJoinCode(e.target.value)}
                   placeholder="Ej: 2f9c8a1b..."
                   aria-label="Código de reunión"
+                  autoComplete="off"
+                  inputMode="text"
                 />
               </label>
 
@@ -109,10 +118,7 @@ const Home: React.FC = () => {
 
         <div className="home__hero-illustration">
           <div className="home__mockup">
-            <img
-              src="/video-conferencia.png"
-              alt="Video conferencia"
-            />
+            <img src="/video-conferencia.png" alt="Video conferencia" />
           </div>
         </div>
       </section>
@@ -125,8 +131,8 @@ const Home: React.FC = () => {
           <article className="home__feature-card">
             <h3>Creación rápida de reuniones</h3>
             <p>
-              Genera un ID de sala único en segundos y comparte el enlace con tu
-              equipo.
+              Crea una sala en segundos y genera automáticamente un enlace y un
+              código para compartir con tu equipo.
             </p>
           </article>
 
@@ -138,23 +144,46 @@ const Home: React.FC = () => {
             </p>
 
             <ul className="home__feature-list">
-              <li><a href="/">Inicio</a></li>
-              <li><a href="/about">Sobre nosotros</a></li>
+              <li>
+                <Link to="/">Inicio</Link>
+              </li>
+              <li>
+                <Link to="/about">Sobre nosotros</Link>
+              </li>
 
               {isAuthenticated ? (
                 <>
-                  <li><a href="/edit-profile">Editar perfil</a></li>
-                  <li><a href="/create">Crear reunión</a></li>
                   <li>
-                    <a href="#" onClick={(e) => { e.preventDefault(); setShowJoinForm(true); }}>
+                    <Link to="/edit-profile">Editar perfil</Link>
+                  </li>
+                  <li>
+                    <Link to="/create">Crear reunión</Link>
+                  </li>
+                  <li>
+                    <button
+                      type="button"
+                      onClick={() => setShowJoinForm(true)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        color: "inherit",
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
                       Unirse a una reunión
-                    </a>
+                    </button>
                   </li>
                 </>
               ) : (
                 <>
-                  <li><a href="/login">Iniciar sesión</a></li>
-                  <li><a href="/register">Registro</a></li>
+                  <li>
+                    <Link to="/login">Iniciar sesión</Link>
+                  </li>
+                  <li>
+                    <Link to="/register">Registro</Link>
+                  </li>
                 </>
               )}
             </ul>
@@ -163,8 +192,8 @@ const Home: React.FC = () => {
           <article className="home__feature-card">
             <h3>Lista para crecer</h3>
             <p>
-              Diseñada para soportar chat, audio y video en tiempo real en los
-              siguientes sprints.
+              La sala de reunión ya incluye chat y controles básicos y está
+              preparada para sumar audio y video en los siguientes sprints.
             </p>
           </article>
         </div>

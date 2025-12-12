@@ -6,7 +6,7 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="footer">
-      <div className="footer__container app-content">
+      <div className="footer__container">
         <div className="footer__top">
           <div className="footer__brand-block">
             <span className="footer__brand">Interactify</span>

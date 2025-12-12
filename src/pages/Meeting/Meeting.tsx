@@ -39,7 +39,7 @@ const Meeting: React.FC = () => {
   const localVideoRef = React.useRef<HTMLVideoElement | null>(null);
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const audioCtxRef = React.useRef<AudioContext | null>(null);
-  const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array }>>({});
+  const peerAnalysersRef = React.useRef<Record<string, { analyser: AnalyserNode; data: Uint8Array<ArrayBuffer> }>>({});
   const animationFrameRef = React.useRef<number | null>(null);
 
   useEffect(() => {
@@ -133,101 +133,111 @@ const Meeting: React.FC = () => {
       // Call announce once
       announce();
 
-      // WebRTC setup
-      const rtc = new WebRTCManager(socket, id || '', {
-        onStream: (pid, stream) => {
-          console.log('[Meeting] Remote stream received from peer:', pid, {
-            videoTracks: stream.getVideoTracks().length,
-            audioTracks: stream.getAudioTracks().length,
-            videoEnabled: stream.getVideoTracks()[0]?.enabled
-          });
-          setRemoteAudios(prev => ({ ...prev, [pid]: stream }));
-          setRemoteStreams(prev => ({ ...prev, [pid]: stream }));
-          // setup analyser per remote stream
-          if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-          const ctx = audioCtxRef.current!;
-          const analyser = ctx.createAnalyser();
-          analyser.fftSize = 512;
-          const src = ctx.createMediaStreamSource(stream);
-          src.connect(analyser);
-          const data = new Uint8Array(analyser.frequencyBinCount);
-          peerAnalysersRef.current[pid] = { analyser, data };
-        },
-        onParticipantLeft: (pid) => {
-          console.log('[Meeting] Participant left:', pid);
-          setRemoteAudios(prev => {
-            const updated = { ...prev };
-            delete updated[pid];
-            return updated;
-          });
-          setRemoteStreams(prev => {
-            const updated = { ...prev };
-            delete updated[pid];
-            return updated;
-          });
-          delete peerAnalysersRef.current[pid];
-        }
-      });
-      rtcRef.current = rtc;
-      const stream = await rtc.initLocalMedia();
-      setLocalStream(stream);
-      
-      // Check if video tracks exist and set initial state
-      if (stream) {
-        const videoTracks = stream.getVideoTracks();
-        const hasVideo = videoTracks.length > 0;
-        console.log('[Meeting] Local media initialized', {
-          hasVideo,
-          videoEnabled: hasVideo ? videoTracks[0].enabled : false,
-          audioTracks: stream.getAudioTracks().length
+      let stream: MediaStream | null = null;
+      try {
+        const rtc = new WebRTCManager(socket, id || '', {
+          onStream: (pid, stream) => {
+            console.log('[Meeting] Remote stream received from peer:', pid, {
+              videoTracks: stream.getVideoTracks().length,
+              audioTracks: stream.getAudioTracks().length,
+              videoEnabled: stream.getVideoTracks()[0]?.enabled
+            });
+            setRemoteAudios(prev => ({ ...prev, [pid]: stream }));
+            setRemoteStreams(prev => ({ ...prev, [pid]: stream }));
+            // setup analyser per remote stream
+            if (!audioCtxRef.current) audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const ctx = audioCtxRef.current!;
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 512;
+            const src = ctx.createMediaStreamSource(stream);
+            src.connect(analyser);
+            const data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
+            peerAnalysersRef.current[pid] = { analyser, data };
+          },
+          onParticipantLeft: (pid) => {
+            console.log('[Meeting] Participant left:', pid);
+            setRemoteAudios(prev => {
+              const updated = { ...prev };
+              delete updated[pid];
+              return updated;
+            });
+            setRemoteStreams(prev => {
+              const updated = { ...prev };
+              delete updated[pid];
+              return updated;
+            });
+            delete peerAnalysersRef.current[pid];
+          }
         });
-        // Start with video ON if available
-        setVideoOn(hasVideo);
+        rtcRef.current = rtc;
+
+        stream = await rtc.initLocalMedia();
+        setLocalStream(stream);
+
+        // Check if video tracks exist and set initial state
+        if (stream) {
+          const videoTracks = stream.getVideoTracks();
+          const hasVideo = videoTracks.length > 0;
+          console.log('[Meeting] Local media initialized', {
+            hasVideo,
+            videoEnabled: hasVideo ? videoTracks[0].enabled : false,
+            audioTracks: stream.getAudioTracks().length
+          });
+          // Start with video ON if available
+          setVideoOn(hasVideo);
+        }
+
+        setConnectionStatus('conectando');
+        await rtc.join();
+      } catch (err: any) {
+        if (err && (err as DOMException).name === 'NotAllowedError') {
+          console.warn('[Meeting] User denied media permissions (camera/mic).', err);
+        } else {
+          console.error('[Meeting] Error initializing media/RTC:', err);
+        }
+        setConnectionStatus('desconectado');
+        return;
       }
-      
-      setConnectionStatus('conectando');
-      await rtc.join();
 
       // speaking indicator for local mic
-  if (!audioCtxRef.current)
-  audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (!audioCtxRef.current)
+        audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-const ctx = audioCtxRef.current!;
-const analyser = ctx.createAnalyser();
-analyser.fftSize = 512;
-analyserRef.current = analyser;
+      const ctx = audioCtxRef.current!;
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyserRef.current = analyser;
 
-const src = ctx.createMediaStreamSource(stream!);
-src.connect(analyser);
+      const src = ctx.createMediaStreamSource(stream!);
+      src.connect(analyser);
 
-// 🔥 FIX: crear ArrayBuffer explícito para evitar crash en deploy
-const data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
+      // 🔥 FIX: crear ArrayBuffer explícito para evitar crash en deploy
+      const data = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount));
 
-const tick = () => {
-  analyser.getByteFrequencyData(data);
-  const avg = data.reduce((a, b) => a + b, 0) / data.length;
-  setSpeaking(avg > 30);
+      const tick = () => {
+        analyser.getByteFrequencyData(data);
+        const avg = data.reduce((a, b) => a + b, 0) / data.length;
+        setSpeaking(avg > 30);
 
-  // update peers speaking
-  const next: Record<string, boolean> = {};
+        // update peers speaking
+        const next: Record<string, boolean> = {};
 
-  for (const [pid, obj] of Object.entries(peerAnalysersRef.current)) {
+        for (const [pid, obj] of Object.entries(peerAnalysersRef.current)) {
+          // 🔥 FIX también para los peers en caso que su Uint8Array no coincida
+          if (!obj.data || obj.data.length !== obj.analyser.frequencyBinCount) {
+            obj.data = new Uint8Array(new ArrayBuffer(obj.analyser.frequencyBinCount));
+          }
 
-    // 🔥 FIX también para los peers en caso que su Uint8Array no coincida
-    if (!obj.data || obj.data.length !== obj.analyser.frequencyBinCount) {
-      obj.data = new Uint8Array(new ArrayBuffer(obj.analyser.frequencyBinCount));
-    }
+          obj.analyser.getByteFrequencyData(obj.data);
+          const pavg = obj.data.reduce((a, b) => a + b, 0) / obj.data.length;
+          next[pid] = pavg > 30;
+        }
 
-    obj.analyser.getByteFrequencyData(obj.data as Uint8Array<ArrayBuffer>);
-    const pavg = obj.data.reduce((a, b) => a + b, 0) / obj.data.length;
-    next[pid] = pavg > 30;
-  }
+        setSpeakingPeers(next);
+        animationFrameRef.current = requestAnimationFrame(tick);
+      };
 
-  setSpeakingPeers(next);
-  animationFrameRef.current = requestAnimationFrame(tick);
-};
-
-animationFrameRef.current = requestAnimationFrame(tick);
+      animationFrameRef.current = requestAnimationFrame(tick);
 
       return () => {
         mounted = false;
