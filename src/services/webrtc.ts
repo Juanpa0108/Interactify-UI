@@ -48,6 +48,7 @@ class WebRTCManager {
   private ignoreOffer: Map<PeerId, boolean> = new Map();
   private isSettingRemoteAnswerPending: Map<PeerId, boolean> = new Map();
   private restartTimers: Map<PeerId, number> = new Map();
+  private pendingCandidates: Map<PeerId, RTCIceCandidateInit[]> = new Map();
   private iceServers: RTCIceServer[] = buildIceServers();
   private preferredPreset: VideoPreset = 'high';
   private preferredVideoBitrate = DEFAULT_VIDEO_BITRATE;
@@ -131,6 +132,7 @@ class WebRTCManager {
       pc.close();
     }
     this.peers.clear();
+    this.pendingCandidates.clear();
     if (this.localStream) {
       this.localStream.getTracks().forEach(t => t.stop());
       this.localStream = null;
@@ -368,10 +370,12 @@ class WebRTCManager {
       if (pc.connectionState === 'failed' || pc.connectionState === 'closed') {
         this.peers.delete(remoteId);
         this.clearIceRestart(remoteId);
+        this.pendingCandidates.delete(remoteId);
       }
     };
 
     this.peers.set(remoteId, pc);
+    this.pendingCandidates.set(remoteId, []);
     return pc;
   }
 
@@ -404,6 +408,13 @@ class WebRTCManager {
         } else {
           await pc.setRemoteDescription(new RTCSessionDescription(offer));
         }
+        const queued = this.pendingCandidates.get(from);
+        if (queued && queued.length) {
+          for (const c of queued) {
+            await pc.addIceCandidate(new RTCIceCandidate(c));
+          }
+          queued.length = 0;
+        }
         const answer = await pc.createAnswer();
         this.isSettingRemoteAnswerPending.set(from, true);
         await pc.setLocalDescription(answer);
@@ -422,6 +433,13 @@ class WebRTCManager {
       try {
         console.debug('[RTC] Received answer <-', from);
         await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        const queued = this.pendingCandidates.get(from);
+        if (queued && queued.length) {
+          for (const c of queued) {
+            await pc.addIceCandidate(new RTCIceCandidate(c));
+          }
+          queued.length = 0;
+        }
       } catch (err) {
         console.error('[RTC] Error handling answer from', from, ':', err);
       }
@@ -431,6 +449,15 @@ class WebRTCManager {
       const pc = this.peers.get(from);
       if (!pc) return;
       try {
+        if (!pc.remoteDescription) {
+          let queue = this.pendingCandidates.get(from);
+          if (!queue) {
+            queue = [];
+            this.pendingCandidates.set(from, queue);
+          }
+          queue.push(candidate);
+          return;
+        }
         console.debug('[RTC] Received ICE <-', from);
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
       } catch (err) {
@@ -443,6 +470,7 @@ class WebRTCManager {
       const pc = this.peers.get(from);
       if (pc) pc.close();
       this.peers.delete(from);
+      this.pendingCandidates.delete(from);
       this.events.onParticipantLeft?.(from);
     });
   }
